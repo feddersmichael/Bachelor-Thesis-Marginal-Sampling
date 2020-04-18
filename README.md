@@ -1,1 +1,1 @@
-# Bachelor-Thesis-MCMC
+# Bachelor-Thesis-Marginal-Sampling
