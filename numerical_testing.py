@@ -32,36 +32,38 @@ def integrand(c, s, y, h, N):
     y and h are represnting the measured data at time points,
     so they com in lists of length N, which is the amount
     of time-points."""
-    prefactor = 1 / ((2 * math.pi * s) ** (N / 2))
+    prefactor = (2 * math.pi * s) ** (-N / 2)
     integr = 0
     for k in range(N):
         integr += (y[k] - c - h[k]) ** 2
-    integr = math.expm1(integr / (2 * s))
+    integr = math.exp(integr / (-2 * s))
     return prefactor * integr
 
 
 def analytical(y, h, N):
     product_1 = N ** (N / 2 - 2)
     product_2 = 2 * np.pi ** ((N - 1) / 2)
-    sum_1 = np.sum((h - y) ** 2)
+    sum_1 = N * np.sum((h - y) ** 2)
     sum_2 = np.sum(y - h) ** 2
-    product_3 = (sum_1 - sum_2) ** (-(N - 3) / 2)
-    return product_1 * product_3 * special.gamma((N - 3) / 2) / product_2
+    product_3 = (sum_1 - sum_2) ** ((N - 3) / -2)
+    product_4 = special.gamma((N - 3) / 2)
+    return product_1 * product_3 * product_4 / product_2
 
 
 def main():
     c = 0
     N = 10
     theta = 0
-    sigma = 1
+    sigma = 1  # sigma in the sense of sigma^2
     h = np.zeros(N)
     y = np.zeros(N)
     for n in range(N):
         h[n] = h_func(n + 1, theta)
         y[n] = y_measured(n + 1, c, theta, sigma)
+
     solution = analytical(y, h, N)
-    result = scipy.integrate.dblquad(integrand, 0.1, 3, lambda x: -3, lambda y: 3, args=(y, h, N))
-    print(result)
+    result = integrate.dblquad(integrand, 0, 100, lambda x: -100, lambda x: 100, args=(y, h, N))
+    print(abs(result[0]-solution))
 
 
 main()
