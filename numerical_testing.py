@@ -62,7 +62,7 @@ def main():
         y[n] = y_measured(n + 1, c, theta, sigma)
 
     solution = analytical(y, h, N)
-    result = integrate.dblquad(integrand, 0, 100, lambda x: -100, lambda x: 100, args=(y, h, N))
+    result = integrate.dblquad(integrand, 0, 80, lambda x: -80, lambda x: 80, args=(y, h, N))
     print(abs(result[0]-solution))
 
 
