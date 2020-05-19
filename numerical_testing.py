@@ -41,6 +41,7 @@ def integrand(c, s, y, h, N):
 
 
 def analytical(y, h, N):
+    """analytical solution for the integral"""
     product_1 = N ** (N / 2 - 2)
     product_2 = 2 * np.pi ** ((N - 1) / 2)
     sum_1 = N * np.sum((h - y) ** 2)
