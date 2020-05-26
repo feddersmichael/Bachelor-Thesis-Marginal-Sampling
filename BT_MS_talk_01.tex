@@ -1,0 +1,150 @@
+\documentclass{beamer}
+\usepackage{tikz}
+\usepackage{float}
+\usepackage{graphicx}
+\usepackage[most]{tcolorbox}
+\usetikzlibrary{decorations.pathreplacing}
+\tcbuselibrary{theorems}
+\tcbset{enhanced,colframe=blue!20,colback={black!5!white},drop shadow}
+\setbeamertemplate{section in toc}[sections numbered]
+\setbeamertemplate{subsection in toc}[subsections numbered]
+\usetheme[numbering=fraction]{metropolis}           % Use metropolis theme
+\title{Bachelor Thesis Marginal-Sampling}
+\date{28.05.2020}
+\author{Michael Fedders}
+
+\newcommand{\s}{\sigma^2}
+\begin{document}
+	\maketitle
+  	\begin{frame}[plain]
+		\frametitle{Table of Contents}
+		\tableofcontents
+	\end{frame}
+\section{Introduction}
+  	\begin{frame}{Motivation}
+	  	In the area of applied mathematics and especially while we are working
+	  	with model based assumptions we have to deal with uncertainties. Mainly
+	  	there are:
+	  	\begin{itemize}
+	  		\item a complete \alert{loss} of some variables
+	  		\item variables, which are measured, have a \alert{noise}
+	  	\end{itemize}
+	  	On the other hand every specification of variables is consuming CPU-time.
+	\end{frame}
+  
+  	\begin{frame}{mathmatical model}
+     	In this setting we will focus on ODE models, which is an abbreviation for
+     	\emph{ordinary differential equation}. The original model can be described
+     	through
+     	\[
+     		\frac{dx(t,\theta)}{dt} = f(x(t,\theta),\theta), \quad x(t_0,\theta) = 			x_0(\theta)
+     	\]
+     	with $x$ as our state vector, $t$ as the time and $\theta$ representing
+     	parameters from our system.
+	\end{frame}
+	
+	\begin{frame}{obtained information}
+  		Unfortunately we have a loss of information due to the noted reasons
+  		above. Therefore we have to work with
+		\[
+			y(t_k,\theta,c) = \tilde{h}(h(x(t_k,\theta),\theta))
+		\]
+		and
+		\[
+			\overline{y}_{k} = y(t_k,\theta,c) + \epsilon_{k}
+		\]
+	\end{frame}
+	
+	
+  	\begin{frame}{measure uncertainties}
+    	We can group the data interpretation in three steps.      	
+  	\end{frame}
+  	
+  	\begin{frame}{measure uncertainties}
+    	We can group the data interpretation in three steps.
+  		\begin{itemize}
+   			\item observation function $h(x(t_k,\theta))$
+    	\end{itemize}
+  	\end{frame}
+  	
+  	\begin{frame}{measure uncertainties}
+    	We can group the data interpretation in three steps.
+    	\begin{itemize}
+    		\item observation function $h(x(t_k,\theta))$
+    		\item relative experimental data through $y = \tilde{h}(h)$
+    	\end{itemize}
+  	\end{frame}
+  	
+  	\begin{frame}{measure uncertainties}
+    	We can group the data interpretation in three steps.
+    	\begin{itemize}
+    		\item observation function $h(x(t_k,\theta))$
+    		\item relative experimental data through $y = \tilde{h}(h)$
+    	\end{itemize}
+    	For example:
+    	\vspace{0.7cm}
+    	\begin{columns}
+  			\begin{column}{5cm}
+  				$y(t_k,\theta,c) = c + h(x(t_k,\theta),\theta)$
+  			\end{column}
+  			\begin{column}{5cm}
+ 				$y_{j}(t,\theta,s) = s_{j} \cdot h_{j}(x(t,\theta),\theta)$
+  			\end{column}
+  		\end{columns}
+  	\end{frame}  	
+  	
+  	\begin{frame}{measure uncertainties}
+    	We can group the data interpretation in three steps.
+    	\begin{itemize}
+    		\item observation function $h(x(t_k,\theta))$
+    		\item relative experimental data through $y = \tilde{h}(h)$
+    		\item adding the noise $\overline{y}_{k} = y + \epsilon_{k}$
+    	\end{itemize}
+  	\end{frame}
+  	
+  	\begin{frame}{measure uncertainties}
+    	We can group the data interpretation in three steps.
+    	\begin{itemize}
+    		\item observation function $h(x(t_k,\theta))$
+    		\item relative experimental data through $y = \tilde{h}(h)$
+    		\item adding the noise $\overline{y}_{k} = y + \epsilon_{k}$
+    	\end{itemize}
+    	For example:
+    	\vspace{0.7cm}
+    	\begin{columns}
+  			\begin{column}{3cm}
+  				$\epsilon_{k} \sim \mathcal{N}(0,\s)$
+  			\end{column}
+  			\begin{column}{4cm}
+ 				$\epsilon_{k} \sim \operatorname{Laplace}(0,\sigma)$
+  			\end{column}
+  		\end{columns}
+  	\end{frame}
+     
+  	\begin{frame}{Bayes Theorem}
+  		We now want to use data to estimate our parameters. To 
+  		do so we will use Bayes Theorem: (formula for normal)
+  	\end{frame}
+
+	\begin{frame}{Bayes Theorem}
+  		We now want to use data to estimate our parameters. To 
+  		do so we will use Bayes Theorem:
+  		\[  \tcboxmath{p(\theta,c,\s \mid D) = \frac{p(D \mid \theta,c,\s) \cdot
+  		p(\theta) \, p(c) \, p(\s)}{p(D)}} \]
+  		Especially we will have to evaluate the likelihood 
+  		$p(D \mid \theta,c,\s)$.
+  	\end{frame}
+  	
+	\begin{frame}{parameter preferences}
+  		But from a process standpoint we are only 
+  		interested in the distribution of $\theta$ and therefore would like to 
+  		only calculate $p(\theta \mid D)$ which has less dimensions to be sampled.
+  	\end{frame}
+  
+\section{evaluation of the likelihood}
+  	\begin{frame}{marginalisation}
+		To get this result we take the expected value from both sides over the 
+		parameters introduced by the noise $\epsilon$ and the relative factor 
+		$\tilde{h}$.
+  	\end{frame}  
+\end{document}
