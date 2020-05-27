@@ -14,42 +14,43 @@
 \author{Michael Fedders}
 
 \newcommand{\s}{\sigma^2}
+\newcommand{\sh}{\hat{\sigma}^2}
 \begin{document}
 	\maketitle
   	\begin{frame}[plain]
 		\frametitle{Table of Contents}
 		\tableofcontents
 	\end{frame}
-\section{Introduction}
+	
+\section{Introduction / Motivation}
+
   	\begin{frame}{Motivation}
 	  	In the area of applied mathematics and especially while we are working
 	  	with model based assumptions we have to deal with uncertainties. Mainly
 	  	there are:
 	  	\begin{itemize}
-	  		\item a complete \alert{loss} of some variables
-	  		\item variables, which are measured, have a \alert{noise}
+	  		\item during observation of the model there is a \alert{loss} of 
+	  		dimension
+	  		\item measuring variables adds a \alert{noise}
 	  	\end{itemize}
-	  	On the other hand every specification of variables is consuming CPU-time.
 	\end{frame}
   
-  	\begin{frame}{mathmatical model}
-     	In this setting we will focus on ODE models, which is an abbreviation for
-     	\emph{ordinary differential equation}. The original model can be described
+  	\begin{frame}{Mathmatical model}
+     	In this setting we will focus on ODE models. The original model can be described
      	through
      	\[
      		\frac{dx(t,\theta)}{dt} = f(x(t,\theta),\theta), \quad x(t_0,\theta) = 			x_0(\theta)
      	\]
      	with $x$ as our state vector, $t$ as the time and $\theta$ representing
-     	parameters from our system.
+     	parameters from our system, which are unknown at the start.
 	\end{frame}
 	
-	\begin{frame}{obtained information}
-  		Unfortunately we have a loss of information due to the noted reasons
-  		above. Therefore we have to work with
+	\begin{frame}{Observation function}
+  		We can not analyse the function directly but have to use
 		\[
-			y(t_k,\theta,c) = \tilde{h}(h(x(t_k,\theta),\theta))
+			y(t_k,\theta) = \tilde{h}(h(x(t_k,\theta),\theta))
 		\]
-		and
+		and, assuming additive noise
 		\[
 			\overline{y}_{k} = y(t_k,\theta,c) + \epsilon_{k}
 		\]
@@ -71,7 +72,8 @@
     	We can group the data interpretation in three steps.
     	\begin{itemize}
     		\item observation function $h(x(t_k,\theta))$
-    		\item relative experimental data through $y = \tilde{h}(h)$
+    		\item relative experimental data through $y = \tilde{h}
+    		(h(t_k, \theta))$
     	\end{itemize}
   	\end{frame}
   	
@@ -79,7 +81,8 @@
     	We can group the data interpretation in three steps.
     	\begin{itemize}
     		\item observation function $h(x(t_k,\theta))$
-    		\item relative experimental data through $y = \tilde{h}(h)$
+    		\item relative information $y = \tilde{h}
+    		(h(t_k, \theta))$
     	\end{itemize}
     	For example:
     	\vspace{0.7cm}
@@ -88,9 +91,22 @@
   				$y(t_k,\theta,c) = c + h(x(t_k,\theta),\theta)$
   			\end{column}
   			\begin{column}{5cm}
- 				$y_{j}(t,\theta,s) = s_{j} \cdot h_{j}(x(t,\theta),\theta)$
+ 				$y(t_k,\theta,s) = s \cdot h(x(t_k,\theta),\theta)$
   			\end{column}
   		\end{columns}
+  	\end{frame}
+  	
+  	\begin{frame}{measure uncertainties}
+    	We can group the data interpretation in three steps.
+    	\begin{itemize}
+    		\item observation function $h(x(t_k,\theta))$
+    		\item relative information $y = \tilde{h}
+    		(h(t_k, \theta))$
+    	\end{itemize}
+    	For example:
+    	\vspace{0.7cm}
+    	\tcbox[colframe=red!75!black]
+  		{$y(t_k,\theta,c) = c + h(x(t_k,\theta),\theta)$}
   	\end{frame}  	
   	
   	\begin{frame}{measure uncertainties}
@@ -98,7 +114,7 @@
     	\begin{itemize}
     		\item observation function $h(x(t_k,\theta))$
     		\item relative experimental data through $y = \tilde{h}(h)$
-    		\item adding the noise $\overline{y}_{k} = y + \epsilon_{k}$
+    		\item adding the noise $\overline{y}_{k} = y + \epsilon_{k}(\sigma)$
     	\end{itemize}
   	\end{frame}
   	
@@ -107,7 +123,7 @@
     	\begin{itemize}
     		\item observation function $h(x(t_k,\theta))$
     		\item relative experimental data through $y = \tilde{h}(h)$
-    		\item adding the noise $\overline{y}_{k} = y + \epsilon_{k}$
+    		\item adding the noise $\overline{y}_{k} = y + \epsilon_{k}(\sigma)$
     	\end{itemize}
     	For example:
     	\vspace{0.7cm}
@@ -120,10 +136,23 @@
   			\end{column}
   		\end{columns}
   	\end{frame}
+  	
+  	\begin{frame}{measure uncertainties}
+    	We can group the data interpretation in three steps.
+    	\begin{itemize}
+    		\item observation function $h(x(t_k,\theta))$
+    		\item relative experimental data through $y = \tilde{h}(h)$
+    		\item adding the noise $\overline{y}_{k} = y + \epsilon_{k}(\sigma)$
+    	\end{itemize}
+    	For example:
+    	\vspace{0.7cm}
+  		\tcbox[colframe=red!75!black]
+  		{$\epsilon_{k} \sim \mathcal{N}(0,\s)$}
+  	\end{frame}
      
   	\begin{frame}{Bayes Theorem}
   		We now want to use data to estimate our parameters. To 
-  		do so we will use Bayes Theorem: (formula for normal)
+  		do so we will use Bayes Theorem: %(formula for normal)
   	\end{frame}
 
 	\begin{frame}{Bayes Theorem}
@@ -131,20 +160,168 @@
   		do so we will use Bayes Theorem:
   		\[  \tcboxmath{p(\theta,c,\s \mid D) = \frac{p(D \mid \theta,c,\s) \cdot
   		p(\theta) \, p(c) \, p(\s)}{p(D)}} \]
-  		Especially we will have to evaluate the likelihood 
-  		$p(D \mid \theta,c,\s)$.
   	\end{frame}
   	
-	\begin{frame}{parameter preferences}
+	\begin{frame}{Marginalization of the posterior}
   		But from a process standpoint we are only 
   		interested in the distribution of $\theta$ and therefore would like to 
   		only calculate $p(\theta \mid D)$ which has less dimensions to be sampled.
   	\end{frame}
-  
-\section{evaluation of the likelihood}
-  	\begin{frame}{marginalisation}
+  	
+  	\begin{frame}{Marginalization of the posterior}
 		To get this result we take the expected value from both sides over the 
 		parameters introduced by the noise $\epsilon$ and the relative factor 
-		$\tilde{h}$.
+		$\tilde{h}$ and receive:
+		\[
+			p(\theta \mid D) = \frac{p(D \mid \theta) \cdot p(\theta)}{p(D)}
+		\]
+		with 
+		\[
+			p(D \mid \theta) = \int_{\mathbb{R}_+} \int_{\mathbb{R}} p(D \mid 
+			\theta,c,\s) p(c) p(\s) \, dc \, d\s
+		\]
   	\end{frame}  
+  
+\section{personal progress}
+
+\begin{frame}{choice of priors}
+	My work so far was concentrated on the case of gaussian noise and relative 
+	information, induced by an offset parameter.
+	One main choice is, which priors $p(c)$ and $p(\s)$ we use, as they are 
+	defining the distribution of $c$ and $\s$.
+\end{frame}
+
+\begin{frame}{choice of priors}
+	First choice: "flat" priors, aka $p(c) = p(\s) = 1$. The problem with this
+	choice is, that
+	\[
+		\int_\mathbb{R} 1 \, dx = \infty \neq 1
+	\]
+	so we are not using a probability distribution here.
+\end{frame}
+
+\begin{frame}{choice of priors}
+	First choice: "flat" priors, aka $p(c) = p(\s) = 1$. The problem with this
+	choice is, that
+	\[
+		\int_\mathbb{R} 1 \, dx = \infty \neq 1
+	\]
+	so we are not using a probability distribution here.
+	
+	\vspace{1cm}
+	\alert{But}: We can still argue, that this choice is preserving enough 
+	information to make it a valid first choice.
+\end{frame}
+
+\begin{frame}{choice of priors}
+	(I might not include this slide and just tell something why the flat prior is 		ok)
+	
+	This is the case, because we can interpret it as a uniform-distribution which
+	is missing the weighing constant. Then we have an insignificant absolute error 
+	if we are aware of the relative distortion.	As an estimation we can use the 
+	area, under which we made the numerical integration in the tests and got a 
+	sufficiently low enough error.
+\end{frame}
+
+\begin{frame}{calculation}
+	First of all we use
+	\[
+		p(D \mid \theta,c,\s) = \prod_{k = 1}^N \frac{1}{\sqrt{2 \pi \s}} \exp
+		\left(-\frac{1}{2} \left(\frac{\overline{y}_{k} - (c + h_k)}{\sigma}
+		\right)^2\right)
+	\]
+\end{frame}
+
+\begin{frame}{calculation}
+	As a result we have to calculate the following integral:
+	\[
+		\iint \prod_{k = 1}^N \frac{1}{\sqrt{2 \pi \s}} \exp\left(-\frac{1}{2} 
+		\left(\frac{\overline{y}_{k} -\left( c + h_{k} \right)}{\sigma}
+		 \right)^2\right) \, p(c) \, p(\s) \, dc \, d\s
+	\]
+\end{frame}
+
+\begin{frame}{calculation}
+	By using a formula for integrals over the exponential function and a 
+	substitution we receive finally:
+	
+	\vspace{0.5cm}
+	\[
+		\frac{\bigl(\sqrt{N}\bigr)^{N-4}}{2\bigl(\sqrt{\pi}\bigr)^{N-1}} \cdot 
+		\Biggl(N \cdot \sum_{k = 1}^N (h_k - \overline{y_k})^2 - \Biggl
+		(\sum_{k = 1}^N \overline{y_k} - h_k)\Biggr)^2 \ \Biggr)^{-(N-3)/2} 
+		\cdot \Gamma \biggl(\frac{N-3}{2}\biggr)
+	\]
+\end{frame}
+
+\begin{frame}{numerical testing}
+	To assure the correctness of our analytical calculation I already applied the 
+	formula to the basic sample regression model, where we make the assumptions 
+	that:
+	\begin{itemize}
+		\item $y(t,\theta,c) = c + t$ and
+		\item $t_k = k$
+	\end{itemize}
+	As a result we get $\overline{y}_k \sim \mathcal{N}(t_k,\s)$. I sampled random
+	variables after that assumption for different values of $c$ and $\s$ and made 
+	plot of the relative error.
+\end{frame}
+
+\begin{frame}{plot}
+	(I have not finished this one yet, I will include it later today)
+\end{frame}
+
+\section{next steps}
+
+\begin{frame}{current work}
+	\begin{itemize}
+	\item The next steps for the flat prior choice will be to implement test 
+	examples of ODEs to further test the analytical derivation.
+	\item I also started the calculation of the integral in the case of a gaussian 
+	prior $c  \sim \mathcal{N}(\mu, \hat{\sigma}^2)$.
+	\end{itemize}
+\end{frame}
+
+\begin{frame}{gaussian prior}
+	By defining three constants
+	\[
+		K_1 = \biggl(\sum_{k = 1}^N (\overline{y_k} - h_k) \biggr)^2, \ K_2 
+		= \sum_{k = 1}^N (\overline{y_k} - h_k)^2, \ K_3 = 
+		\sum_{k = 1}^N (\overline{y_k} - h_k)
+	\]
+	we can rewrite the integral in the following way:
+\end{frame}
+
+\begin{frame}{gaussian prior}
+	\[
+    	\int_0^{\infty} \frac{1}{(2\pi\s)^{N/2}} \sqrt{\frac{\s}{N\sh + \s}} \cdot 
+    	p(\s)
+	\]
+	\[
+   		\cdot \exp \biggl(\frac{(\mu \sh K_3 - \mu^2 N \sh /2 - \sh K_2) \cdot \s 
+   		+ (\sh)^2 K_1 /2 - N (\sh)^2 K_2}{\s \cdot (N\sh + \s)} \biggr)
+   		 \, d\s
+	\]
+\end{frame}
 \end{document}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
