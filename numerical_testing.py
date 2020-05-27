@@ -3,6 +3,7 @@ import math
 import numpy as np
 import scipy.special as special
 import scipy
+import matplotlib.pyplot as plt
 
 
 def h_func(t, theta):
@@ -34,9 +35,9 @@ def integrand(c, s, y, h, N):
     of time-points."""
     prefactor = (2 * math.pi * s) ** (-N / 2)
     integr = 0
-    for k in range(N):
+    for k in range(N):  # TODO numpy writing
         integr += (y[k] - c - h[k]) ** 2
-    integr = math.exp(integr / (-2 * s))
+    integr = math.exp(integr / (-2 * s))  # TODO numpy exponential
     return prefactor * integr
 
 
@@ -52,19 +53,42 @@ def analytical(y, h, N):
 
 
 def main():
-    c = 0
+    c = np.linspace(-10, 10, 10)
     N = 10
     theta = 0
-    sigma = 1  # sigma in the sense of sigma^2
+    sigma = np.linspace(0.02, 2, 10)  # sigma in the sense of sigma^2
+    value = np.empty((c.size, sigma.size))
+    #for i in range(c.size):
+    #    for j in range(sigma.size):
+    #        value[i, j] = result(c[i], sigma[j], theta, N)
+
+    #fig = plt.figure()
+    #s = fig.add_subplot(1, 1, 1, xlabel='$\\sigma$', ylabel='c')
+    im = plt.imshow(
+        value,
+        extent=(sigma[0], sigma[-1], c[0], c[-1]))
+    #fig.colorbar(im)
+    #fig.savefig('heatmap.png')
+    plt.show()
+
+    # solution = analytical(y, h, N)
+    # result = integrate.dblquad(integrand, 0, 1000, lambda x: -5+c, lambda x: 5+c, args=(y, h, N))
+
+
+def result(c, sigma, theta, N):
+    mean_1 = 0
+    mean_2 = 0
+    # for z in range(10):
     h = np.zeros(N)
     y = np.zeros(N)
     for n in range(N):
         h[n] = h_func(n + 1, theta)
         y[n] = y_measured(n + 1, c, theta, sigma)
-
-    solution = analytical(y, h, N)
-    result = integrate.dblquad(integrand, 0, 80, lambda x: -80, lambda x: 80, args=(y, h, N))
-    print(abs(result[0]-solution))
+    mean_1 = integrate.dblquad(integrand, 0, min(10, 5 * sigma), lambda x: -5 + c, lambda x: 5 + c, args=(y, h, N))[0]
+    mean_2 = analytical(y, h, N)
+    # mean_1 = mean_1/10
+    # mean_2 = mean_2/10
+    return abs(mean_1 - mean_2) / mean_2
 
 
 main()
