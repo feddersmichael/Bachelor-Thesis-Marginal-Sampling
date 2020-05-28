@@ -27,11 +27,11 @@
   	\begin{frame}{Motivation}
 	  	In the area of applied mathematics and especially while we are working
 	  	with model based assumptions we have to deal with uncertainties. Mainly
-	  	there are:
+	  	there are two possible points:
 	  	\begin{itemize}
-	  		\item during observation of the model there is a \alert{loss} of 
+	  		\item during observation of the model there may be a \alert{loss} of 
 	  		dimension
-	  		\item measuring variables adds a \alert{noise}
+	  		\item measuring variables can add a \alert{noise}
 	  	\end{itemize}
 	\end{frame}
   
@@ -39,7 +39,8 @@
      	In this setting we will focus on ODE models. The original model can be described
      	through
      	\[
-     		\frac{dx(t,\theta)}{dt} = f(x(t,\theta),\theta), \quad x(t_0,\theta) = 			x_0(\theta)
+     	\frac{dx(t,\theta)}{dt} = f(x(t,\theta),\theta), \quad x(t_0,\theta) = 
+     	x_0(\theta)
      	\]
      	with $x$ as our state vector, $t$ as the time and $\theta$ representing
      	parameters from our system, which are unknown at the start.
@@ -52,36 +53,36 @@
 		\]
 		and, assuming additive noise
 		\[
-			\overline{y}_{k} = y(t_k,\theta,c) + \epsilon_{k}
+			\overline{y}_{k} = y(t_k,\theta) + \epsilon_{k}
 		\]
 	\end{frame}
 	
 	
-  	\begin{frame}{measure uncertainties}
-    	We can group the data interpretation in three steps.      	
+  	\begin{frame}{Measure uncertainties}
+    	We can group this data observation in three steps.      	
   	\end{frame}
   	
-  	\begin{frame}{measure uncertainties}
+  	\begin{frame}{Measure uncertainties}
     	We can group the data interpretation in three steps.
   		\begin{itemize}
    			\item observation function $h(x(t_k,\theta))$
     	\end{itemize}
   	\end{frame}
   	
-  	\begin{frame}{measure uncertainties}
+  	\begin{frame}{Measure uncertainties}
     	We can group the data interpretation in three steps.
     	\begin{itemize}
     		\item observation function $h(x(t_k,\theta))$
-    		\item relative experimental data through $y = \tilde{h}
+    		\item relative experimental data through $y_k = \tilde{h}
     		(h(t_k, \theta))$
     	\end{itemize}
   	\end{frame}
   	
-  	\begin{frame}{measure uncertainties}
+  	\begin{frame}{Measure uncertainties}
     	We can group the data interpretation in three steps.
     	\begin{itemize}
     		\item observation function $h(x(t_k,\theta))$
-    		\item relative information $y = \tilde{h}
+    		\item relative information $y_k = \tilde{h}
     		(h(t_k, \theta))$
     	\end{itemize}
     	For example:
@@ -96,11 +97,11 @@
   		\end{columns}
   	\end{frame}
   	
-  	\begin{frame}{measure uncertainties}
+  	\begin{frame}{Measure uncertainties}
     	We can group the data interpretation in three steps.
     	\begin{itemize}
     		\item observation function $h(x(t_k,\theta))$
-    		\item relative information $y = \tilde{h}
+    		\item relative information $y_k = \tilde{h}
     		(h(t_k, \theta))$
     	\end{itemize}
     	For example:
@@ -109,45 +110,62 @@
   		{$y(t_k,\theta,c) = c + h(x(t_k,\theta),\theta)$}
   	\end{frame}  	
   	
-  	\begin{frame}{measure uncertainties}
+  	\begin{frame}{Measure uncertainties}
     	We can group the data interpretation in three steps.
     	\begin{itemize}
     		\item observation function $h(x(t_k,\theta))$
-    		\item relative experimental data through $y = \tilde{h}(h)$
-    		\item adding the noise $\overline{y}_{k} = y + \epsilon_{k}(\sigma)$
+    		\item relative experimental data through $y_k = \tilde{h}
+    		(h(x(t_k,\theta)))$
+    		\item adding the noise $\overline{y}_{k} = y + \varepsilon_{k}$
     	\end{itemize}
   	\end{frame}
   	
-  	\begin{frame}{measure uncertainties}
+  	\begin{frame}{Measure uncertainties}
     	We can group the data interpretation in three steps.
     	\begin{itemize}
     		\item observation function $h(x(t_k,\theta))$
-    		\item relative experimental data through $y = \tilde{h}(h)$
-    		\item adding the noise $\overline{y}_{k} = y + \epsilon_{k}(\sigma)$
+    		\item relative experimental data through $y = \tilde{h}
+    		(h(x(t_k,\theta))$
+    		\item adding the noise $\overline{y}_{k} = y + \varepsilon_{k}$
     	\end{itemize}
     	For example:
     	\vspace{0.7cm}
     	\begin{columns}
   			\begin{column}{3cm}
-  				$\epsilon_{k} \sim \mathcal{N}(0,\s)$
+  				$\varepsilon_{k} \sim \mathcal{N}(0,\s)$
   			\end{column}
   			\begin{column}{4cm}
- 				$\epsilon_{k} \sim \operatorname{Laplace}(0,\sigma)$
+ 				$\varepsilon_{k} \sim \operatorname{Laplace}(0,\sigma)$
   			\end{column}
   		\end{columns}
   	\end{frame}
   	
-  	\begin{frame}{measure uncertainties}
+  	\begin{frame}{Measure uncertainties}
     	We can group the data interpretation in three steps.
     	\begin{itemize}
     		\item observation function $h(x(t_k,\theta))$
-    		\item relative experimental data through $y = \tilde{h}(h)$
-    		\item adding the noise $\overline{y}_{k} = y + \epsilon_{k}(\sigma)$
+    		\item relative experimental data through $y = \tilde{h}
+    		(h(x(t_k,\theta))$
+    		\item adding the noise $\overline{y}_{k} = y + \varepsilon_{k}$
     	\end{itemize}
     	For example:
     	\vspace{0.7cm}
   		\tcbox[colframe=red!75!black]
   		{$\epsilon_{k} \sim \mathcal{N}(0,\s)$}
+  	\end{frame}
+  	
+  	\begin{frame}{Measure uncertainties}
+    	We can group the data interpretation in three steps.
+    	\begin{itemize}
+    		\item observation function $h(x(t_k,\theta))$
+    		\item relative experimental data through $y = \tilde{h}
+    		(h(x(t_k,\theta))$
+    		\item adding the noise $\overline{y}_{k} = y + \varepsilon_{k}$
+    	\end{itemize}
+    	In total we get:
+    	\vspace{0.7cm}
+  		\tcbox[colframe=red!75!black]
+  		{$\overline{y}_{k} = c + (h(x(t_k,\theta)) + \varepsilon_{k}$}
   	\end{frame}
      
   	\begin{frame}{Bayes Theorem}
@@ -170,7 +188,7 @@
   	
   	\begin{frame}{Marginalization of the posterior}
 		To get this result we take the expected value from both sides over the 
-		parameters introduced by the noise $\epsilon$ and the relative factor 
+		parameters introduced by the noise $\varepsilon$ and the relative factor 
 		$\tilde{h}$ and receive:
 		\[
 			p(\theta \mid D) = \frac{p(D \mid \theta) \cdot p(\theta)}{p(D)}
@@ -182,127 +200,107 @@
 		\]
   	\end{frame}  
   
-\section{personal progress}
-
-\begin{frame}{choice of priors}
-	My work so far was concentrated on the case of gaussian noise and relative 
-	information, induced by an offset parameter.
-	One main choice is, which priors $p(c)$ and $p(\s)$ we use, as they are 
-	defining the distribution of $c$ and $\s$.
-\end{frame}
-
-\begin{frame}{choice of priors}
-	First choice: "flat" priors, aka $p(c) = p(\s) = 1$. The problem with this
-	choice is, that
-	\[
-		\int_\mathbb{R} 1 \, dx = \infty \neq 1
-	\]
-	so we are not using a probability distribution here.
-\end{frame}
-
-\begin{frame}{choice of priors}
-	First choice: "flat" priors, aka $p(c) = p(\s) = 1$. The problem with this
-	choice is, that
-	\[
-		\int_\mathbb{R} 1 \, dx = \infty \neq 1
-	\]
-	so we are not using a probability distribution here.
+\section{Personal progress}
 	
-	\vspace{1cm}
-	\alert{But}: We can still argue, that this choice is preserving enough 
-	information to make it a valid first choice.
-\end{frame}
+	\begin{frame}{Calculation}
+		By inserting the likelihood function we receive
+		\[
+			\int_{\mathbb{R}_+} \int_\mathbb{R} \prod_{k = 1}^N \frac{1}{\sqrt{2 
+			\pi \s}} \exp\left(-\frac{1}{2} \left(\frac{\overline{y}_{k} -\left( c 
+			+ h_{k} \right)}{\sigma} \right)^2\right) \, p(c) \, p(\s) \, dc 
+			\, d\s
+		\]
+	\end{frame}
 
-\begin{frame}{choice of priors}
-	(I might not include this slide and just tell something why the flat prior is 		ok)
+
+	\begin{frame}{Choice of priors}
+		One main choice here is, which priors $p(c)$ and $p(\s)$ we use, as they 
+		are defining the distribution of $c$ and $\s$.
+	\end{frame}
+
+	\begin{frame}{Choice of priors}
+		First choice: "flat" priors, aka $p(c) = p(\s) = 1$. The problem with this
+		choice is, that
+		\[
+			\int_\mathbb{R} 1 \, dx = \infty \neq 1
+		\]
+		so we are not using a probability distribution here.
+	\end{frame}
+
+	\begin{frame}{Choice of priors}
+		First choice: "flat" priors, aka $p(c) = p(\s) = 1$. The problem with this
+		choice is, that
+		\[
+			\int_\mathbb{R} 1 \, dx = \infty \neq 1
+		\]
+		so we are not using a probability distribution here.
 	
-	This is the case, because we can interpret it as a uniform-distribution which
-	is missing the weighing constant. Then we have an insignificant absolute error 
-	if we are aware of the relative distortion.	As an estimation we can use the 
-	area, under which we made the numerical integration in the tests and got a 
-	sufficiently low enough error.
-\end{frame}
+		\vspace{1cm}
+		\alert{But}: We can still argue, that this choice is preserving enough 
+		information to make it a valid first choice.
+	\end{frame}
 
-\begin{frame}{calculation}
-	First of all we use
-	\[
-		p(D \mid \theta,c,\s) = \prod_{k = 1}^N \frac{1}{\sqrt{2 \pi \s}} \exp
-		\left(-\frac{1}{2} \left(\frac{\overline{y}_{k} - (c + h_k)}{\sigma}
-		\right)^2\right)
-	\]
-\end{frame}
+	\begin{frame}{Calculation}
+		If we now insert $p(c) = p(\s) = 1$ in
+		\[
+			\int_{\mathbb{R}_+} \int_\mathbb{R} \prod_{k = 1}^N \frac{1}{\sqrt{2 \pi \s}} \exp\left(-\frac{1}{2} 
+			\left(\frac{\overline{y}_{k} -\left( c + h_{k} \right)}{\sigma}
+		 	\right)^2\right) \, p(c) \, p(\s) \, dc \, d\s
+		\]
+		we can substitute twice and get
+		\[
+			\frac{\bigl(\sqrt{N}\bigr)^{N-4}}{2\bigl(\sqrt{\pi}\bigr)^{N-1}} \cdot 
+			\Biggl(N \cdot \sum_{k = 1}^N (h_k - \overline{y_k})^2 - \Biggl
+			(\sum_{k = 1}^N \overline{y_k} - h_k)\Biggr)^2 \ \Biggr)^{-(N-3)/2} 
+			\cdot \Gamma \biggl(\frac{N-3}{2}\biggr)
+		\]
+	\end{frame}
 
-\begin{frame}{calculation}
-	As a result we have to calculate the following integral:
-	\[
-		\iint \prod_{k = 1}^N \frac{1}{\sqrt{2 \pi \s}} \exp\left(-\frac{1}{2} 
-		\left(\frac{\overline{y}_{k} -\left( c + h_{k} \right)}{\sigma}
-		 \right)^2\right) \, p(c) \, p(\s) \, dc \, d\s
-	\]
-\end{frame}
+	\begin{frame}{Numerical testing}
+		First test with basic sample regression model:
+		\begin{itemize}
+			\item $y(t,\theta,c) = c + t$ and
+			\item $t_k = k$
+		\end{itemize}
+		In total we get $\overline{y}_k \sim \mathcal{N}(c + t_k,\s)$.
+	\end{frame}
 
-\begin{frame}{calculation}
-	By using a formula for integrals over the exponential function and a 
-	substitution we receive finally:
-	
-	\vspace{0.5cm}
-	\[
-		\frac{\bigl(\sqrt{N}\bigr)^{N-4}}{2\bigl(\sqrt{\pi}\bigr)^{N-1}} \cdot 
-		\Biggl(N \cdot \sum_{k = 1}^N (h_k - \overline{y_k})^2 - \Biggl
-		(\sum_{k = 1}^N \overline{y_k} - h_k)\Biggr)^2 \ \Biggr)^{-(N-3)/2} 
-		\cdot \Gamma \biggl(\frac{N-3}{2}\biggr)
-	\]
-\end{frame}
+	\begin{frame}{Plot}
+		(I have not finished this one yet, I will include it later today)
+	\end{frame}
 
-\begin{frame}{numerical testing}
-	To assure the correctness of our analytical calculation I already applied the 
-	formula to the basic sample regression model, where we make the assumptions 
-	that:
-	\begin{itemize}
-		\item $y(t,\theta,c) = c + t$ and
-		\item $t_k = k$
-	\end{itemize}
-	As a result we get $\overline{y}_k \sim \mathcal{N}(t_k,\s)$. I sampled random
-	variables after that assumption for different values of $c$ and $\s$ and made 
-	plot of the relative error.
-\end{frame}
+\section{Next steps}
 
-\begin{frame}{plot}
-	(I have not finished this one yet, I will include it later today)
-\end{frame}
+	\begin{frame}{Current work}
+		\begin{itemize}
+			\item The next steps for the flat prior choice will be to implement 
+			test examples of ODEs to further test the analytical derivation.
+			\item I also started the calculation of the integral in the case of a 
+			gaussian prior $c  \sim \mathcal{N}(\mu, \hat{\sigma}^2)$.
+		\end{itemize}
+	\end{frame}
 
-\section{next steps}
+	\begin{frame}{Gaussian prior}
+		By defining three constants
+		\[
+			K_1 = \biggl(\sum_{k = 1}^N (\overline{y_k} - h_k) \biggr)^2, \ K_2 
+			= \sum_{k = 1}^N (\overline{y_k} - h_k)^2, \ K_3 = 
+			\sum_{k = 1}^N (\overline{y_k} - h_k)
+		\]
+		we can rewrite the integral in the following way:
+	\end{frame}
 
-\begin{frame}{current work}
-	\begin{itemize}
-	\item The next steps for the flat prior choice will be to implement test 
-	examples of ODEs to further test the analytical derivation.
-	\item I also started the calculation of the integral in the case of a gaussian 
-	prior $c  \sim \mathcal{N}(\mu, \hat{\sigma}^2)$.
-	\end{itemize}
-\end{frame}
-
-\begin{frame}{gaussian prior}
-	By defining three constants
-	\[
-		K_1 = \biggl(\sum_{k = 1}^N (\overline{y_k} - h_k) \biggr)^2, \ K_2 
-		= \sum_{k = 1}^N (\overline{y_k} - h_k)^2, \ K_3 = 
-		\sum_{k = 1}^N (\overline{y_k} - h_k)
-	\]
-	we can rewrite the integral in the following way:
-\end{frame}
-
-\begin{frame}{gaussian prior}
-	\[
-    	\int_0^{\infty} \frac{1}{(2\pi\s)^{N/2}} \sqrt{\frac{\s}{N\sh + \s}} \cdot 
-    	p(\s)
-	\]
-	\[
-   		\cdot \exp \biggl(\frac{(\mu \sh K_3 - \mu^2 N \sh /2 - \sh K_2) \cdot \s 
-   		+ (\sh)^2 K_1 /2 - N (\sh)^2 K_2}{\s \cdot (N\sh + \s)} \biggr)
-   		 \, d\s
-	\]
-\end{frame}
+	\begin{frame}{Gaussian prior}
+		\[
+    		\int_0^{\infty} \frac{1}{(2\pi\s)^{N/2}} \sqrt{\frac{\s}{N\sh + \s}}
+    		\cdot p(\s)
+		\]
+		\[
+   			\cdot \exp \biggl(\frac{(\mu \sh K_3 - \mu^2 N \sh /2 - \sh K_2) \cdot 
+   			\s + (\sh)^2 K_1 /2 - N (\sh)^2 K_2}{\s \cdot (N\sh + \s)} \biggr)
+   		 	\, d\s
+		\]
+	\end{frame}
 \end{document}
 
 
