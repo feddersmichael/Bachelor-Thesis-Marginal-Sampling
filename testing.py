@@ -1,34 +1,46 @@
-import scipy.integrate as integrate
-import math
-import numpy as np
-import scipy.special as special
-import scipy
+import matplotlib
 import matplotlib.pyplot as plt
+from matplotlib.colors import BoundaryNorm
+from matplotlib.ticker import MaxNLocator
+import numpy as np
 
-# First create some toy data:
-x = np.linspace(0, 2*np.pi, 400)
-y = np.sin(x**2)
+# make these smaller to increase the resolution
+dx, dy = 0.05, 0.05
+
+# generate 2 2d grids for the x & y bounds
+y, x = np.mgrid[slice(1, 5 + dy, dy),
+                slice(1, 5 + dx, dx)]
+
+z = np.sin(x)**10 + np.cos(10 + y*x) * np.cos(x)
+
+# x and y are bounds, so z should be the value *inside* those bounds.
+# Therefore, remove the last value from the z array.
+z = z[:-1, :-1]
+levels = MaxNLocator(nbins=15).tick_values(z.min(), z.max())
+
+
+# pick the desired colormap, sensible levels, and define a normalization
+# instance which takes data values and translates those into levels.
+cmap = plt.get_cmap('RdBu')
+norm = BoundaryNorm(levels, ncolors=cmap.N, clip=True)
+
+fig, (ax0, ax1) = plt.subplots(nrows=2)
+
+im = ax0.pcolormesh(x, y, z, cmap=cmap, norm=norm)
+fig.colorbar(im, ax=ax0)
+ax0.set_title('pcolormesh with levels')
+
+
+# contours are *point* based plots, so convert our bound into point
+# centers
+cf = ax1.contourf(x[:-1, :-1] + dx/2.,
+                  y[:-1, :-1] + dy/2., z, levels=levels,
+                  cmap=cmap)
+fig.colorbar(cf, ax=ax1)
+ax1.set_title('contourf with levels')
+
+# adjust spacing between subplots so `ax1` title and `ax0` tick labels
+# don't overlap
+fig.tight_layout()
+
 plt.show()
-
-# Creates just a figure and only one subplot
-fig, ax = plt.subplots()
-ax.plot(x, y)
-ax.set_title('Simple plot')
-
-# Creates four polar axes, and accesses them through the returned array
-fig, axes = plt.subplots(2, 2, subplot_kw=dict(polar=True))
-axes[0, 0].plot(x, y)
-axes[1, 1].scatter(x, y)
-
-# Share a X axis with each column of subplots
-plt.subplots(2, 2, sharex='col')
-
-# Share a Y axis with each row of subplots
-plt.subplots(2, 2, sharey='row')
-
-# Share both X and Y axes with all subplots
-plt.subplots(2, 2, sharex='all', sharey='all')
-
-# Creates figure number 10 with a single subplot
-# and clears it if it already exists.
-fig, ax=plt.subplots(num=10, clear=True)
