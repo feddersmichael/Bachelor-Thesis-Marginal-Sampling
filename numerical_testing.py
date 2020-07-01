@@ -133,11 +133,11 @@ def relative_error_srm(prior, N=10, size=20):
             for c in range(size):
                 for n in range(N):
                     y_bar[n] = np.random.normal(Y[c, sigma] + h[n], X[c, sigma])
-                mean_1 = integrate.dblquad(integrand_normal_gamma, 0, 5 * X[c, sigma], lambda x: Y[c, sigma] - 5,
+                mean_1 = integrate.dblquad(integrand_normal_gamma, 0, 10, lambda x: Y[c, sigma] - 5,
                                            lambda x: Y[c, sigma] + 5, args=(y_bar, h, mu, kappa, alpha, beta))[0] \
                          * Int_const
                 mean_2 = analytical_normal_gamma_prior(y_bar, h, mu, kappa, alpha, beta)
-                Z[c, sigma] = abs(mean_1 - mean_2) / mean_2
+                Z[c, sigma] = abs(mean_1 - mean_2) / (mean_2 + 1e-12)
     out = [X, Y, Z]
     return out
 
