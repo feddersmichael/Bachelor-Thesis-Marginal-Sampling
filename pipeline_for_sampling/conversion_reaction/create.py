@@ -26,7 +26,7 @@ nt = len(times)
 simulations = [analytical_b(t, a0=a0, b0=b0, k1=k1, k2=k2)
                for t in times]
 sigma = 0.015
-#measurements = (sc * np.asarray(simulations)) + sigma * np.random.randn(nt)
+#measurements = (sc + np.asarray(simulations)) + sigma * np.random.randn(nt)
 #measurements = measurements.clip(0.)
 
 measurements = [0.0219, 0.4442, 0.5840, 0.6951, 0.7249, 0.7242, 0.7398, 0.7506, 0.7843, 0.7768, 0.7359]
@@ -36,19 +36,19 @@ measurement_df = pd.DataFrame(data={
     SIMULATION_CONDITION_ID: ['c0'] * nt,
     TIME: times,
     MEASUREMENT: measurements,
-    OBSERVABLE_PARAMETERS: ['scaling'] * nt,
+    OBSERVABLE_PARAMETERS: ['offset'] * nt,
     NOISE_PARAMETERS: ['sigma'] * nt
 })
 
 observable_df = pd.DataFrame(data={
     OBSERVABLE_ID: ['obs_b'],
-    OBSERVABLE_FORMULA: ['observableParameter1_obs_b * B'],
+    OBSERVABLE_FORMULA: ['observableParameter1_obs_b + B'],
     NOISE_FORMULA: ['noiseParameter1_obs_b'],
     OBSERVABLE_TRANSFORMATION: [LOG]
 }).set_index([OBSERVABLE_ID])
 
 parameter_df = pd.DataFrame(data={
-    PARAMETER_ID: ['k1', 'k2', 'scaling', 'sigma'],
+    PARAMETER_ID: ['k1', 'k2', 'offset', 'sigma'],
     PARAMETER_SCALE: [LOG] * 4,
     LOWER_BOUND: [0.0067, 0.0067, 1e-12, 1e-12],
     UPPER_BOUND: [148.413, 148.413, 1e12, 1e12],
