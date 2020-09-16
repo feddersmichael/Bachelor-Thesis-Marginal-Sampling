@@ -25,6 +25,22 @@
 		\tableofcontents
 	\end{frame}
 	
+	\begin{frame}{Small repetition}
+		We are dealing with the case 
+		\[
+		\overline{y}_{k} = c + (h(x(t_k,\theta)) + \varepsilon_{k}
+  		\]
+  		where
+  		\begin{itemize}
+  		\item $\y_k$ is the data
+  		\item $c$ is the offset parameter
+  		\item $h$ is the observation function
+  		\item $\varepsilon_k$ is the noise
+  		\end{itemize}
+	\end{frame}		
+	
+	
+	
 \section{Normal-Gamma Prior}
 
 	\begin{frame}{Environment}
@@ -107,10 +123,10 @@
    	\end{frame}
    	
    	\begin{frame}{Numerical Testing}
-   		The relative error
+   		\includegraphics[scale=0.45]{relative_error.png}
    	\end{frame}
    	
-\section{Log-Normal Prior}
+\section{Log-Normal noise}
 
 	\begin{frame}{Log-Normal likelihood}
 		We make the assumption that $\varepsilon_k \sim e^{\sigma \cdot Z}$, i.e. 			it has a  log-normal distribution. The new likelihood has the following 			form:
@@ -125,9 +141,14 @@
 		Problem: We can't substitute here as every $\ln(\y_k - c - h_k)$ part has 			a different substraction and the logarithm can't be summed up.
 	\end{frame}
 
-\section{Laplacian Prior}
+\section{Laplacian noise}
 
-
+	\begin{frame}
+		
+	\end{frame}
+	
+	
+	
 \end{document}
 
 
