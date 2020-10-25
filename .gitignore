@@ -1,2 +1,10 @@
+.ipynb_checkpoints/
 venv/
 .idea/
+*.aux
+*.log
+*.nav
+*.out
+*.snm
+*.gz
+*.toc
