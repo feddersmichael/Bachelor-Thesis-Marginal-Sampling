@@ -1,0 +1,1 @@
+#define sigmaobs_b sigmay[0]

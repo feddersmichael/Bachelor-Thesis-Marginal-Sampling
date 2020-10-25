@@ -1,0 +1,1 @@
+#define obs_b y[0]
