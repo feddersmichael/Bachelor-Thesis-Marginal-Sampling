@@ -1,5 +1,5 @@
-parameterId	parameterScale	lowerBound	upperBound	nominalValue	estimate
-k1	log	0.0067	148.413	1.0	1
-k2	log	0.0067	148.413	0.1	1
-offset	log	1e-12	1000000000000.0	0.9	1
-precision	log	1e-12	1000000000000.0	0.015	1
+parameterId	parameterScale	lowerBound	upperBound	nominalValue	estimate
+k1	log	0.0067	148.413	1.0	1
+k2	log	0.0067	148.413	0.1	1
+offset	log	1e-12	1000000000000.0	0.9	1
+sigma	log	1e-12	1000000000000.0	0.015	1

@@ -1,2 +1,2 @@
-observableId	observableFormula	noiseFormula	observableTransformation
-obs_b	observableParameter1_obs_b + B	noiseParameter1_obs_b	log
+observableId	observableFormula	noiseFormula	observableTransformation
+obs_b	observableParameter1_obs_b + B	noiseParameter1_obs_b	log

@@ -29,7 +29,10 @@ sigma = 0.015
 #measurements = (sc + np.asarray(simulations)) + sigma * np.random.randn(nt)
 #measurements = measurements.clip(0.)
 
-measurements = [0.0219, 0.4442, 0.5840, 0.6951, 0.7249, 0.7242, 0.7398, 0.7506, 0.7843, 0.7768, 0.7359]
+offset = 1
+
+measurements = np.asarray([0.0219, 0.4442, 0.5840, 0.6951, 0.7249, 0.7242, 0.7398, 0.7506, 0.7843, 0.7768, 0.7359])
+measurements = measurements + offset
 
 measurement_df = pd.DataFrame(data={
     OBSERVABLE_ID: ['obs_b'] * nt,
