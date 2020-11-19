@@ -1,1 +1,0 @@
-#define mobs_b my[0]

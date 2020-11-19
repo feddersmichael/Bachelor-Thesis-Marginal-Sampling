@@ -1,4 +1,5 @@
 .ipynb_checkpoints/
+amici_models/
 venv/
 .idea/
 *.aux
