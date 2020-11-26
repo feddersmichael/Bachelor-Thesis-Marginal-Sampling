@@ -191,7 +191,7 @@ def numerical_testing(model='srm', prior='flat'):
     The error is plotted against the changing values of c and sigma.
     :param prior: flat or normal gamma
     :param model: determines model - either sample regression or conversion reaction
-    :return: plot of the relative error
+    :return: plot    of the relative error
     """
     if model == 'crm':
         if prior == 'flat':
