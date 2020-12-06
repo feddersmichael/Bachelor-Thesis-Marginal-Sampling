@@ -2,118 +2,22 @@ import pypesto
 import pypesto.petab
 import pypesto.sample as sample
 import pypesto.visualize as visualize
+import seaborn as sns
 
-import petab
 import numpy as np
-from scipy.special import gammaln
 import pickle
 import os
 import matplotlib.pyplot as plt
 
-petab_problem = petab.Problem.from_yaml(
-    "conversion_reaction/SS_conversion_reaction.yaml")
-
 d = os.getcwd()
-mu = 0
-alpha = 100
-beta = 0.1
-kappa = 0.01
 
 
-def analytical_b(t, a0, b0, k1, k2):
-    return (k2 - k2 * np.exp(-(k2 + k1) * t)) / (k2 + k1)
+def negative_log_posterior():
+    pass
 
 
-def simulate_model(x, tvec):
-    # assign parameters
-    k1, k2, _, _ = x
-    # define initial conditions
-    a0 = 1
-    b0 = 0.01
-    # simulate model
-    simulation = [analytical_b(t, a0, b0, k1, k2)
-                  for t in tvec]
-    return simulation
-
-
-def log_prior(x):
-    """ Log prior function."""
-    # assign variables from input x
-    offset = x[2]
-    precision = x[3]
-
-    # evaluate log normal-gamma prior
-    l_prior = alpha * np.log(beta) + (alpha - 0.5) * np.log(precision) \
-              + 0.5 * (np.log(kappa) - np.log(2) - np.log(np.pi)) - gammaln(alpha) \
-              - beta * precision - 0.5 * precision * kappa * (offset - mu) ** 2
-
-    return l_prior
-
-
-def negative_log_posterior(x):
-    """ Negative log posterior function."""
-
-    offset = x[2]
-    precision = x[3]
-
-    # experimental data
-    data = np.asarray(petab_problem.measurement_df.measurement)
-    # time vector
-    tvec = np.asarray(petab_problem.measurement_df.time)
-
-    n_timepoints = len(tvec)
-
-    # simulate model
-    _simulation = simulate_model(np.exp(x), tvec)
-    simulation = (offset + np.asarray(_simulation))
-
-    # evaluate standard log likelihood
-    res = data - simulation
-    sum_res = np.sum(res ** 2)
-
-    constant = np.log(precision) - np.log(2) - np.log(np.pi)
-
-    l_llh = 0.5 * (n_timepoints * constant - precision * sum_res)
-
-    # evaluate log normal-gamma prior
-    l_prior = log_prior(x)
-
-    # return NEGATIVE log posterior (required for pyPESTO)
-    return -(l_llh + l_prior)
-
-
-def negative_log_marginal_posterior(x):
-    """
-    negative logarithmic marginalized posterior
-    :param x: x_0 = k1, x_1 = k_2
-    """
-
-    # experimental data
-    data = np.asarray(petab_problem.measurement_df.measurement)
-    # time vector
-    tvec = np.asarray(petab_problem.measurement_df.time)
-
-    n_timepoints = len(tvec)
-
-    # simulate model
-    _simulation = simulate_model(np.exp(x), tvec)
-    simulation = np.asarray(_simulation)
-
-    # evaluate standard log likelihood
-    res = data - simulation
-
-    C_1 = (np.sum(res ** 2) + kappa * mu ** 2 + 2 * beta) / 2
-    C_2 = ((np.sum(res) + kappa * mu) ** 2) / (2 * (n_timepoints + kappa))
-    log_C = np.log(C_1 - C_2)
-
-    mlikelihood_1 = alpha * ((np.log(beta)) - log_C)
-    mlikelihood_2 = gammaln(alpha)
-    mlikelihood_3 = (n_timepoints / 2) * (np.log(2) + np.log(np.pi) + log_C)
-    mlikelihood_4 = (np.log(kappa) - np.log(n_timepoints + kappa)) / 2
-    mlikelihood_5 = gammaln(n_timepoints / 2 + alpha)
-    marg_likelihood = mlikelihood_1 - mlikelihood_2 - mlikelihood_3 + mlikelihood_4 + mlikelihood_5
-
-    return -marg_likelihood
+def negative_log_marginal_posterior():
+    pass
 
 
 def standard_sampling():
@@ -138,12 +42,12 @@ def marginal_sampling():
     return problem
 
 
-def merge_full_parameter():
+def merge_full_parameter(save=False):
     data_full_sampling = [0] * 50
     length = 0
 
     for n in range(50):
-        with open(d + '\\Results_FP_CR\\result_FP_CR_' + str(n) + '.pickle', 'rb') as infile_1:
+        with open(d + '\\Results_CR_FP\\result_FP_CR_' + str(n) + '.pickle', 'rb') as infile_1:
             data_full_sampling[n] = pickle.load(infile_1)  # pickle.load(infile_1)
             length += 10001 - data_full_sampling[n].burn_in
 
@@ -176,8 +80,9 @@ def merge_full_parameter():
         merged_data.sample_result.trace_neglogprior[0, index:index + converge_size] \
             = data_full_sampling[n].trace_neglogprior[0, burn_in:]
         index += converge_size
-    with open(d + '\\Results_FP_CR\\merged_data_FP_CR.pickle', 'wb') as save_file:
-        pickle.dump(merged_data, save_file)
+    if save:
+        with open(d + '\\Results_CR_FP\\merged_data_FP_CR.pickle', 'wb') as save_file:
+            pickle.dump(merged_data.sample_result, save_file)
 
     fig = plt.figure(figsize=(12, 5))
     ax0 = fig.add_subplot(1, 3, 1)
@@ -191,12 +96,12 @@ def merge_full_parameter():
     plt.show()
 
 
-def merge_marginalised_parameter():
+def merge_marginalised_parameter(save=False):
     data_marginal_sampling = [0] * 50
     length = 0
 
     for n in range(50):
-        with open(d + '\\Results_MP_CR\\result_MP_CR_' + str(n) + '.pickle', 'rb') as infile_2:
+        with open(d + '\\Results_CR_MP\\result_MP_CR_' + str(n) + '.pickle', 'rb') as infile_2:
             data_marginal_sampling[n] = pickle.load(infile_2)
             length += 10001 - data_marginal_sampling[n].burn_in
 
@@ -229,8 +134,8 @@ def merge_marginalised_parameter():
         merged_data.sample_result.trace_neglogprior[0, index:index + converge_size] \
             = data_marginal_sampling[n].trace_neglogprior[0, burn_in:]
         index += converge_size
-    with open(d + '\\Results_MP_CR\\merged_data_MP_CR.pickle', 'wb') as save_file:
-        pickle.dump(merged_data, save_file)
+    with open(d + '\\Results_CR_MP\\merged_data_MP_CR.pickle', 'wb') as save_file:
+        pickle.dump(merged_data.sample_result, save_file)
 
     fig = plt.figure(figsize=(12, 5))
     ax0 = fig.add_subplot(1, 3, 1)
@@ -244,10 +149,40 @@ def merge_marginalised_parameter():
     plt.show()
 
 
+def one_dimensional_marginal():
+    data = [pypesto.Result(standard_sampling()), pypesto.Result(marginal_sampling())]
+    with open(d + '\\Results_CR_FP\\merged_data_FP_CR.pickle', 'rb') as data_file:
+        data[0].sample_result = pickle.load(data_file)
+    with open(d + '\\Results_CR_MP\\merged_data_MP_CR.pickle', 'rb') as data_file:
+        data[1].sample_result = pickle.load(data_file)
+
+    fig, ax = plt.subplots(2, 2, squeeze=False, figsize=(12, 5))
+
+    _, params_fval, _, _, param_names = visualize.sampling.get_data_to_plot(result=data[0], i_chain=0, stepsize=1)
+
+    par_ax = dict(zip(param_names, ax.flat))
+    sns.set(style="ticks")
+
+    for idx, par_id in enumerate(param_names):
+        sns.distplot(params_fval[par_id], rug=True, ax=par_ax[par_id])
+
+        par_ax[par_id].set_xlabel(param_names[idx])
+        par_ax[par_id].set_ylabel('Density')
+
+    sns.despine()
+
+    _, params_fval, _, _, param_names = visualize.sampling.get_data_to_plot(result=data[1], i_chain=0, stepsize=1)
+    sns.distplot(params_fval['k1'], rug=True, ax=par_ax['k1'])
+    sns.distplot(params_fval['k2'], rug=True, ax=par_ax['k2'])
+
+    fig.tight_layout()
+    plt.show()
+
+
 def main():
-    # merge_full_parameter()
-    merge_marginalised_parameter()
-    n = 1
+    # merge_full_parameter(save=True)
+    # merge_marginalised_parameter(save=True)
+    one_dimensional_marginal()
     return 0
 
 
