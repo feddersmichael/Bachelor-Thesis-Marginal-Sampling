@@ -2,6 +2,10 @@
 amici_models/
 venv/
 .idea/
+pipeline_for_sampling/Results_CR_FP/
+pipeline_for_sampling/Results_CR_MP/
+pipeline_for_sampling/Results_mRNA_FP/
+pipeline_for_sampling/Results_mRNA_MP/
 *.aux
 *.log
 *.nav
@@ -9,3 +13,4 @@ venv/
 *.snm
 *.gz
 *.toc
+*.pickle
