@@ -3,6 +3,7 @@ import pypesto.petab
 import pypesto.sample as sample
 import pypesto.visualize as visualize
 import seaborn as sns
+from copy import deepcopy
 
 import numpy as np
 import pickle
@@ -183,16 +184,27 @@ def boxplot():
     Result_MP = pypesto.Result(marginal_sampling())
     x_1 = [0.] * 50
     x_2 = [0.] * 50
-    data_sampling = [x_1, x_2]
+    eff_sample_size_per_CPU = [x_1, x_2]
+    CPU_time = deepcopy(eff_sample_size_per_CPU)
     for n in range(50):
         with open(d + '\\Results_CR_FP\\result_FP_CR_' + str(n) + '.pickle', 'rb') as infile_1:
             Result_FP.sample_result = pickle.load(infile_1)
-            data_sampling[0][n] = pypesto.sample.effective_sample_size(Result_FP)
+            eff_sample_size_per_CPU[0][n] = pypesto.sample.effective_sample_size(Result_FP)\
+                                            / Result_FP.sample_result.time
+            CPU_time[0][n] = Result_FP.sample_result.time
         with open(d + '\\Results_CR_MP\\result_MP_CR_' + str(n) + '.pickle', 'rb') as infile_2:
             Result_MP.sample_result = pickle.load(infile_2)
-            data_sampling[1][n] = pypesto.sample.effective_sample_size(Result_MP)
-    fig, ax = plt.subplots(figsize=(12, 5))
-    ax.boxplot(data_sampling)
+            eff_sample_size_per_CPU[1][n] = pypesto.sample.effective_sample_size(Result_MP) / Result_MP.sample_result.time
+            CPU_time[1][n] = Result_MP.sample_result.time
+
+    # fig_0 = plt.figure(figsize=(12, 5))
+    fig_1 = plt.figure(figsize=(12, 5))
+    # ax0 = fig_0.add_subplot()
+    ax1 = fig_1.add_subplot()
+    # ax0.boxplot(eff_sample_size_per_CPU, labels=['Full parameter', 'Marginal parameter'])
+    # ax0.set_ylabel('Effective sample size per CPU time')
+    ax1.boxplot(CPU_time, labels=['Full parameter', 'Marginal parameter'])
+    ax1.set_ylabel('CPU-time')
     plt.show()
 
 
