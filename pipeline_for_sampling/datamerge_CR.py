@@ -174,15 +174,33 @@ def one_dimensional_marginal():
     _, params_fval, _, _, param_names = visualize.sampling.get_data_to_plot(result=data[1], i_chain=0, stepsize=1)
     sns.distplot(params_fval['k1'], rug=True, ax=par_ax['k1'])
     sns.distplot(params_fval['k2'], rug=True, ax=par_ax['k2'])
-
     fig.tight_layout()
+    plt.show()
+
+
+def boxplot():
+    Result_FP = pypesto.Result(standard_sampling())
+    Result_MP = pypesto.Result(marginal_sampling())
+    x_1 = [0.] * 50
+    x_2 = [0.] * 50
+    data_sampling = [x_1, x_2]
+    for n in range(50):
+        with open(d + '\\Results_CR_FP\\result_FP_CR_' + str(n) + '.pickle', 'rb') as infile_1:
+            Result_FP.sample_result = pickle.load(infile_1)
+            data_sampling[0][n] = pypesto.sample.effective_sample_size(Result_FP)
+        with open(d + '\\Results_CR_MP\\result_MP_CR_' + str(n) + '.pickle', 'rb') as infile_2:
+            Result_MP.sample_result = pickle.load(infile_2)
+            data_sampling[1][n] = pypesto.sample.effective_sample_size(Result_MP)
+    fig, ax = plt.subplots(figsize=(12, 5))
+    ax.boxplot(data_sampling)
     plt.show()
 
 
 def main():
     # merge_full_parameter(save=True)
     # merge_marginalised_parameter(save=True)
-    one_dimensional_marginal()
+    # one_dimensional_marginal()
+    boxplot()
     return 0
 
 
