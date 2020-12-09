@@ -152,7 +152,6 @@ def one_dimensional_marginal(model: str = 'CR'):
         problem_1 = standard_sampling_CR()
         problem_2 = marginal_sampling_CR()
         storage_ID = '_CR'
-
     elif model == 'mRNA':
         problem_1 = standard_sampling_mRNA()
         problem_2 = marginal_sampling_mRNA()
@@ -164,7 +163,8 @@ def one_dimensional_marginal(model: str = 'CR'):
     with open(d + '\\Results' + storage_ID + '_MP\\merged_data' + storage_ID + '_MP.pickle', 'rb') as data_file:
         data[1].sample_result = pickle.load(data_file)
 
-    nr_params, params_fval, _, _, param_names = visualize.sampling.get_data_to_plot(result=data[0], i_chain=0, stepsize=1)
+    nr_params, params_fval, _, _, param_names = visualize.sampling.get_data_to_plot(result=data[0], i_chain=0,
+                                                                                    stepsize=1)
 
     num_row = int(np.round(np.sqrt(nr_params)))
     num_col = int(np.ceil(nr_params / num_row))
@@ -190,32 +190,47 @@ def one_dimensional_marginal(model: str = 'CR'):
     plt.show()
 
 
-def boxplot(mode: str = 'CPU'):
-    Result_FP = pypesto.Result(standard_sampling_CR())
-    Result_MP = pypesto.Result(marginal_sampling_CR())
-    x_1 = [0.] * 50
-    x_2 = [0.] * 50
+def boxplot(mode: str = 'CPU', model: str = 'CR'):
+    if model == 'CR':
+        problem_1 = standard_sampling_CR()
+        problem_2 = marginal_sampling_CR()
+        states = 10001
+        amount_samples = 50
+        storage_ID = 'CR'
+    elif model == 'mRNA':
+        problem_1 = standard_sampling_mRNA()
+        problem_2 = marginal_sampling_mRNA()
+        states = 1000001
+        amount_samples = 10
+        storage_ID = 'mRNA'
+
+    Result_FP = pypesto.Result(problem_1)
+    Result_MP = pypesto.Result(problem_2)
+    x_1 = [0.] * states
+    x_2 = [0.] * states
     eff_sample_size_per_CPU = [x_1, x_2]
     CPU_time = deepcopy(eff_sample_size_per_CPU)
-    for n in range(50):
-        with open(d + '\\Results_CR_FP\\result_CR_FP_' + str(n) + '.pickle', 'rb') as infile_1:
+    for n in range(amount_samples):
+        with open(d + '\\Results' + storage_ID + '_FP\\result_' + storage_ID + '_FP_' + str(n) + '.pickle', 'rb') \
+                as infile_1:
             Result_FP.sample_result = pickle.load(infile_1)
             eff_sample_size_per_CPU[0][n] = pypesto.sample.effective_sample_size(Result_FP) \
-                                            / Result_FP.sample_result.time
+                / Result_FP.sample_result.time
             CPU_time[0][n] = Result_FP.sample_result.time
-        with open(d + '\\Results_CR_MP\\result_CR_MP_' + str(n) + '.pickle', 'rb') as infile_2:
+        with open(d + '\\Results' + storage_ID + '_MP\\result_' + storage_ID + '_MP_' + str(n) + '.pickle', 'rb') \
+                as infile_2:
             Result_MP.sample_result = pickle.load(infile_2)
-            eff_sample_size_per_CPU[1][n] = pypesto.sample.effective_sample_size(
-                Result_MP) / Result_MP.sample_result.time
+            eff_sample_size_per_CPU[1][n] = pypesto.sample.effective_sample_size(Result_MP) \
+                / Result_MP.sample_result.time
             CPU_time[1][n] = Result_MP.sample_result.time
 
-    if mode == 'CPU':
+    if mode == 'CPU' or mode == 'both':
         fig = plt.figure(figsize=(12, 5))
         ax = fig.add_subplot()
         ax.boxplot(CPU_time, labels=['Full parameter', 'Marginal parameter'])
         ax.set_ylabel('CPU-time')
         plt.show()
-    elif mode == 'eff_ss_CPU':
+    if mode == 'eff_ss_CPU' or mode == 'both':
         fig = plt.figure(figsize=(12, 5))
         ax = fig.add_subplot()
         ax.boxplot(eff_sample_size_per_CPU, labels=['Full parameter', 'Marginal parameter'])
@@ -227,7 +242,7 @@ def main():
     # merge_and_plot('CR', 'FP', True, True)
     # merge_marginalised_parameter(save=True)
     # one_dimensional_marginal('CR')
-    boxplot('CPU')
+    boxplot('CPU', 'CR')
     return 0
 
 
