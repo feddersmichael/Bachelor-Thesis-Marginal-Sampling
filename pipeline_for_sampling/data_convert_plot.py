@@ -71,6 +71,31 @@ def marginal_sampling_mRNA():
     return problem
 
 
+def save_converter(path: str = None, mode: str = None):
+    with open(path, 'rb') as infile:
+        samplefile = pickle.load(infile)
+    sampleresult_and_type = [samplefile, mode]
+    with open(path, 'wb') as outfile:
+        pickle.dump(sampleresult_and_type, outfile)
+
+
+def burn_in_change(path: str = None, burn_in: int = None):
+    with open(path, 'rb') as infile:
+        samplefile = pickle.load(infile)
+    samplefile.burn_in = burn_in
+    with open(path, 'wb') as outfile:
+        pickle.dump(samplefile, outfile)
+
+
+def visualisation(mode: str = None, path: str = None):
+    fig = plt.figure(figsize=(12, 5))
+    ax = plt.subplot()
+    with open(path, 'rb') as infile:
+        samplefile = pickle.load(infile)
+    if mode == 'trace':
+        ax = visualize.sampling_fval_trace()
+
+
 def merge_and_plot(model: str = 'CR', sampling_type: str = 'FP', save: bool = False, visualization: bool = True):
     data_full_sampling = [0] * 50
     length = 0
@@ -99,7 +124,7 @@ def merge_and_plot(model: str = 'CR', sampling_type: str = 'FP', save: bool = Fa
 
     for n in range(amount_samples):
         with open(d + '\\Results' + storage_ID + '\\result' + storage_ID + '_' + str(n) + '.pickle', 'rb') as infile_1:
-            data_full_sampling[n] = pickle.load(infile_1)  # pickle.load(infile_1)
+            data_full_sampling[n] = pickle.load(infile_1)
             length += states - data_full_sampling[n].burn_in
 
     merged_data = pypesto.Result(problem)
@@ -213,13 +238,13 @@ def boxplot(mode: str = 'CPU', model: str = 'CR'):
     CPU_time = deepcopy(eff_sample_size_per_CPU)
     for n in range(amount_samples):
         with open(d + '\\Results' + storage_ID + '_FP\\result_' + storage_ID + '_FP_' + str(n) + '.pickle', 'rb') \
-                as infile_1:
+            as infile_1:
             Result_FP.sample_result = pickle.load(infile_1)
             eff_sample_size_per_CPU[0][n] = pypesto.sample.effective_sample_size(Result_FP) \
                                             / Result_FP.sample_result.time
             CPU_time[0][n] = Result_FP.sample_result.time
         with open(d + '\\Results' + storage_ID + '_MP\\result_' + storage_ID + '_MP_' + str(n) + '.pickle', 'rb') \
-                as infile_2:
+            as infile_2:
             Result_MP.sample_result = pickle.load(infile_2)
             eff_sample_size_per_CPU[1][n] = pypesto.sample.effective_sample_size(Result_MP) \
                                             / Result_MP.sample_result.time
@@ -306,7 +331,7 @@ def parameters_plot(model: str = 'CR', sampling_type: str = 'FP', sample_selecti
             ax = visualize.sampling_parameters_trace(Result, size=(12, 5), use_problem_bounds=False, full_trace=True)
             if save:
                 plt.savefig(fname=d + '\\plots\\' + model + '_' + sampling_type + '\\'
-                            + 'sampling_parameters_' + str(n) + '.png')
+                                  + 'sampling_parameters_' + str(n) + '.png')
             # plt.show()
 
 
@@ -342,19 +367,11 @@ def one_d_marginals_plot(model: str = 'CR', sampling_type: str = 'FP', sample_se
             ax = visualize.sampling_1d_marginals(Result, size=(12, 5))
             if save:
                 plt.savefig(fname=d + '\\plots\\' + model + '_' + sampling_type + '\\'
-                            + 'one_d_marginals_' + str(n) + '.png')
+                                  + 'one_d_marginals_' + str(n) + '.png')
             # plt.show()
 
 
 def main():
-    # plotlist = [n for n in range(10)]
-    # merge_and_plot('mRNA', 'MP', True, False)
-    # merge_marginalised_parameter(save=True)
-    # one_dimensional_marginal('CR')
-    # boxplot('CPU', 'CR')
-    trace_plot('mRNA', 'MP', sample_selection='merge', save=True)
-    # parameters_plot('mRNA', 'MP', sample_selection='merge', save=True)
-    # one_d_marginals_plot('mRNA', 'MP', sample_selection='merge', save=True)
     return 0
 
 
