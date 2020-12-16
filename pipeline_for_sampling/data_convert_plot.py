@@ -16,10 +16,16 @@ d = os.getcwd()
 
 
 def negative_log_posterior():
+    """
+    dummy function for our problem function
+    """
     pass
 
 
 def negative_log_marginal_posterior():
+    """
+    dummy function for our problem function
+    """
     pass
 
 
@@ -71,65 +77,105 @@ def marginal_sampling_mRNA():
     return problem
 
 
-def save_converter(path: str = None, mode: str = None):
-    with open(path, 'rb') as infile:
-        samplefile = pickle.load(infile)
-    sampleresult_and_type = [samplefile, mode]
-    with open(path, 'wb') as outfile:
-        pickle.dump(sampleresult_and_type, outfile)
+def result_generator(result_type: str = None, sample_result: str = None):
+    """
+    Transforms a sample_result into a proper Result object
+    :param result_type: Defines the object function we use
+    :param sample_result: if given aleady includes the sample_result into the new Result object
+    :return: the generated Result object
+    """
+    if result_type == 'CR_FP':
+        generated_result = pypesto.Result(standard_sampling_CR())
+        if sample_result is not None:
+            generated_result.sample_result = sample_result
+        return generated_result
+    elif result_type == 'CR_MP':
+        generated_result = pypesto.Result(marginal_sampling_CR())
+        if sample_result is not None:
+            generated_result.sample_result = sample_result
+        return generated_result
+    elif result_type == 'mRNA_FP':
+        generated_result = pypesto.Result(standard_sampling_mRNA())
+        if sample_result is not None:
+            generated_result.sample_result = sample_result
+        return generated_result
+    elif result_type == 'mRNA_MP':
+        generated_result = pypesto.Result(marginal_sampling_mRNA())
+        if sample_result is not None:
+            generated_result.sample_result = sample_result
+        return generated_result
 
 
 def burn_in_change(path: str = None, burn_in: int = None):
+    """
+    Changes the burn_in parameter manually if the Geweke test is not working properly
+    :param path:path of the file we want to change
+    :param burn_in: addition of steps to previous burn_in index
+    """
     with open(path, 'rb') as infile:
         samplefile = pickle.load(infile)
-    samplefile.burn_in = burn_in
+    samplefile[0].burn_in += burn_in
     with open(path, 'wb') as outfile:
         pickle.dump(samplefile, outfile)
 
 
-def visualisation(mode: str = None, path: str = None):
+def visualisation(mode: str = None, path: str = None, save: bool = False, savename: str = None, show: bool = False):
+    """
+    Visualizing sample results
+    :param mode: type of visualization
+    :param path: path of the sample which shall be visualized, expected to have .pickle at the end
+    :param save: Whether the plot shall be saved
+    :param savename: Name under which the plot shall be saved
+    :param show: Whether the plot shall be presented
+    """
     fig = plt.figure(figsize=(12, 5))
     ax = plt.subplot()
     with open(path, 'rb') as infile:
         samplefile = pickle.load(infile)
     if mode == 'trace':
-        ax = visualize.sampling_fval_trace()
+        sample_result = result_generator(samplefile[1], samplefile[0])
+        ax = visualize.sampling_fval_trace(sample_result, size=(12, 5), full_trace=True)
+        if save:
+            plt.savefig(fname=d + '\\plots\\' + samplefile[1] + '\\' + savename + '_trace.png')
+        if show:
+            plt.show()
+    elif mode == '1dmarginals':
+        sample_result = result_generator(samplefile[1], samplefile[0])
+        ax = visualize.sampling_1d_marginals(sample_result, size=(12, 5))
+        if save:
+            plt.savefig(fname=d + '\\plots\\' + samplefile[1] + '\\' + savename + '_1dmarginals.png')
+        if show:
+            plt.show()
+    elif mode == 'parameters':
+        sample_result = result_generator(samplefile[1], samplefile[0])
+        ax = visualize.sampling_parameters_trace(sample_result, size=(12, 5), use_problem_bounds=False, full_trace=True)
+        if save:
+            plt.savefig(fname=d + '\\plots\\' + samplefile[1] + '\\' + savename + '_parameters.png')
+        if show:
+            plt.show()
 
 
-def merge_and_plot(model: str = 'CR', sampling_type: str = 'FP', save: bool = False, visualization: bool = True):
-    data_full_sampling = [0] * 50
+def merge_and_plot(start_sample: str = None, amount_samples: int = 10, save: bool = False, visualization: bool = False):
+    """
+    Merging of different sample runs into one run by cutting the burn in phase
+    :param start_sample: First sample which shall be merged
+    :param amount_samples: Amount of samples which shall be merged
+    :param save: Whether the result shall be merged
+    :param visualization: Whether the result shall be visualized
+    """
+    with open(start_sample, 'rb') as infile:
+        result_type = pickle.load(infile)[1]
+    merged_data = result_generator(result_type)
     length = 0
-    if model == 'CR':
-        amount_samples = 50
-        states = 10001
-        if sampling_type == 'FP':
-            problem = standard_sampling_CR()
-            parameters = 4
-            storage_ID = '_CR_FP'
-        if sampling_type == 'MP':
-            problem = marginal_sampling_CR()
-            parameters = 2
-            storage_ID = '_CR_MP'
-    elif model == 'mRNA':
-        amount_samples = 10
-        states = 1000001
-        if sampling_type == 'FP':
-            problem = standard_sampling_mRNA()
-            parameters = 6
-            storage_ID = '_mRNA_FP'
-        if sampling_type == 'MP':
-            problem = marginal_sampling_mRNA()
-            parameters = 4
-            storage_ID = '_mRNA_MP'
+    data_full_sampling = [0] * amount_samples
 
     for n in range(amount_samples):
-        with open(d + '\\Results' + storage_ID + '\\result' + storage_ID + '_' + str(n) + '.pickle', 'rb') as infile_1:
-            data_full_sampling[n] = pickle.load(infile_1)
-            length += states - data_full_sampling[n].burn_in
+        with open(start_sample[:-8] + str(n) + '.pickle',
+                  'rb') as infile_1:  # TODO Poblem might arise if start has double digit number 8->9
+            data_full_sampling[n] = pickle.load(infile_1)[0]
+            length += np.shape(data_full_sampling[n].trace_x)[1] - data_full_sampling[n].burn_in
 
-    merged_data = pypesto.Result(problem)
-
-    trace_x = np.zeros((1, length, parameters))
+    trace_x = np.zeros((1, length, merged_data.problem.dim))
     merged_data.sample_result.trace_x = trace_x
 
     trace_neglogpost = np.zeros((1, length))
@@ -148,7 +194,7 @@ def merge_and_plot(model: str = 'CR', sampling_type: str = 'FP', save: bool = Fa
     index = 0
     for n in range(amount_samples):
         burn_in = data_full_sampling[n].burn_in
-        converge_size = states - burn_in
+        converge_size = np.shape(data_full_sampling[n].trace_x)[1] - burn_in
         merged_data.sample_result.trace_x[0, index:index + converge_size, :] \
             = data_full_sampling[n].trace_x[0, burn_in:, :]
         merged_data.sample_result.trace_neglogpost[0, index:index + converge_size] \
@@ -157,20 +203,15 @@ def merge_and_plot(model: str = 'CR', sampling_type: str = 'FP', save: bool = Fa
             = data_full_sampling[n].trace_neglogprior[0, burn_in:]
         index += converge_size
     if save:
-        with open(d + '\\Results' + storage_ID + '\\merged_data' + storage_ID + '.pickle', 'wb') as save_file:
-            pickle.dump(merged_data.sample_result, save_file)
+        with open(d + '\\Results_' + result_type + '\\merged_data.pickle', 'wb') as save_file:
+            pickle.dump([merged_data.sample_result, result_type], save_file)
 
     if visualization:
-        fig = plt.figure(figsize=(12, 5))
-        ax0 = fig.add_subplot(1, 3, 1)
-        ax1 = fig.add_subplot(1, 3, 2)
-        ax2 = fig.add_subplot(1, 3, 3)
-
-        ax0 = visualize.sampling_fval_trace(merged_data, size=(12, 5), full_trace=True)
-        ax1 = visualize.sampling_parameters_trace(merged_data, use_problem_bounds=False, full_trace=True, size=(12, 5))
-        ax2 = visualize.sampling_1d_marginals(merged_data, size=(12, 5))
-
-        plt.show()
+        visualisation('trace', d + '\\Results_' + result_type + '\\merged_data.pickle', save=True, savename='merged')
+        visualisation('1dmarginals', d + '\\Results_' + result_type + '\\merged_data.pickle', save=True,
+                      savename='merged')
+        visualisation('parameters', d + '\\Results_' + result_type + '\\merged_data.pickle', save=True,
+                      savename='merged')
 
 
 def one_dimensional_marginal(model: str = 'CR', save: bool = True):
@@ -372,7 +413,8 @@ def one_d_marginals_plot(model: str = 'CR', sampling_type: str = 'FP', sample_se
 
 
 def main():
-    return 0
+    path = d + '\\Results_CR_MP\\result_CR_MP_0.pickle'
+    merge_and_plot(path, 50, True, True)
 
 
 main()
