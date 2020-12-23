@@ -1,212 +1,89 @@
+"""
+Numerical testing of the analytically derived integral
+"""
+
 import scipy.integrate as integrate
 import numpy as np
 import scipy.special as special
-import scipy
+import matplotlib.pyplot as plt
+import seaborn as sns
+import os
+
+d = os.getcwd()
 
 
-def X_2(t, theta):
+def integrand_normal_gamma(offset, precision, measurement):
     """
 
-    :param t:
-    :param theta:
+    :param precision:
+    :param offset:
+    :param measurement:
     :return:
     """
-    return t
+    alpha = 1
+    beta = 1
+    kappa = 1
+    N = 10
+    observable = np.array(range(1, 11))
+
+    factor_0 = precision ** (alpha + (N - 1) / 2)
+    factor_1 = np.sum((measurement[0] - observable - offset) ** 2) * (precision / 2)
+    factor_2 = kappa * offset ** 2 + 2 * beta
+    return factor_0 * np.exp(factor_2 - factor_1)
 
 
-def integrand_flat_prior(c, s, y_bar, h, N):
-    """
-    Integrand of our marginalisation for flat prior
-    :param c:       offset parameter
-    :param s:       variance of our noise
-    :param y_bar:   the data we can measure offset and noise compensated
-    :param h:       the data we can measure, without compensation
-    :param N:       amount of time points
-    :return:        value of the integrand
-    """
-    prefactor = (2 * np.pi * s) ** (-N / 2)
-    integr = 0
-    for k in range(N):  # TODO numpy writing
-        integr += (y_bar[k] - c - h[k]) ** 2
-    integr = np.exp(integr / (-2 * s))
-    return prefactor * integr
-
-
-def integrand_normal_gamma(c, lamda, y_bar, h, mu, kappa, alpha, beta):
+def analytical_normal_gamma_prior(measurement):
     """
 
-    :param c:       offset parameter
-    :param lamda:   = 1/s^2, called precision with sigma being the variance of our noise,
-                    also involved in teh variance of c
-    :param y_bar:   the data we can measure offset and noise compensated
-    :param h:       the data we can measure, without compensation
-    :param mu:      mean of distribution of c (normal distribution)
-    :param kappa:   rate parameter for the variance of c
-    :param alpha:   shape parameter for lambda
-    :param beta:    rate parameter for lambda
-    :return:        value of the integrand
-    """
-    N = len(y_bar)
-    prefactor = lamda ** (alpha + (N - 1) / 2)
-    value = 0
-    for k in range(N):
-        value += (y_bar[k] - h[k] - c) ** 2
-    value += kappa * (c - mu) ** 2 + 2 * beta
-    value = np.exp(-value * lamda / 2)
-    return value * prefactor
-
-
-def analytical_flat_prior(y_bar, h, N):
-    """
-    analytical solution for our integral, marginalizing sigma and c
-    :param y_bar:   the data we can measure offset and noise compensated
-    :param h:       the data we can measure, without compensation
-    :param N:       amount of time stamps
-    :return:        value of the integral
-    """
-    product_1 = N ** (N / 2 - 2)
-    product_2 = 2 * np.pi ** ((N - 1) / 2)
-    sum_1 = N * np.sum((h - y_bar) ** 2)
-    sum_2 = np.sum(y_bar - h) ** 2
-    product_3 = (sum_1 - sum_2) ** ((N - 3) / -2)
-    product_4 = special.gamma((N - 3) / 2)
-    return product_1 * product_3 * product_4 / product_2
-
-
-def analytical_normal_gamma_prior(y_bar, h, mu, kappa, alpha, beta):
-    """
-
-    :param y_bar:
-    :param h:
-    :param mu:
-    :param kappa:
-    :param alpha:
-    :param beta:
+    :param measurement:
     :return:
     """
-    N = len(y_bar)
-    C_1 = 0
-    C_2 = 0
-    for k in range(N):
-        temp = y_bar[k] - h[k]
-        C_1 += temp ** 2
-        C_2 += temp
-    C_1 += kappa * mu ** 2 + 2 * beta
-    C_2 = (C_2 + kappa * mu) ** 2
-    C = C_1 / 2 - C_2 / (2 * (N + kappa))
-    prefactor_1 = (beta/C) ** alpha * np.sqrt(kappa / (N + kappa))
-    prefactor_2 = scipy.special.gamma(alpha) * (2 * np.pi * C) ** (N / 2)
-    return prefactor_1 / prefactor_2 * scipy.special.gamma(N / 2 + alpha)
+
+    alpha = 1
+    beta = 1
+    N = 10
+    kappa = 1
+    observable = np.array(range(1, 11))
+    res = measurement - observable
+    C_0 = (np.sum(res ** 2) + 2 * beta) / 2
+    C_1 = (np.sum(res) ** 2) / (2 * (N + kappa))
+    C = C_0 - C_1
+    factor_0 = np.sqrt((2 * np.pi) / (N + kappa))
+    factor_1 = C ** (-alpha - N / 2)
+    return factor_0 * factor_1 * special.gamma(N / 2 + alpha)
 
 
-def relative_error_srm(prior, N=10, size=20):
+def relative_error(noise: str = 'Gaussian', prior: str = 'normal-gamma'):
     """
-
-    :param prior:
-    :param N:
-    :param size:
-    :return:
+    Calculating teh relative error between our analytical derivation and the numerical integration
+    :param noise: Which noise we consider
+    :param prior: Which prior was chosen
     """
-    Y, X = np.meshgrid(np.linspace(-10, 10 + (20 / size), size + 1), np.linspace(0.05, 2 + (1.95 / size), size + 1))
-    Z = np.empty((size, size))
-    h = np.array([i + 1 for i in range(N)])
-    y_bar = np.empty(N)
-    if prior == 'flat':
-        for sigma in range(size):
-            for c in range(size):
-                for n in range(N):
-                    y_bar[n] = np.random.normal(Y[c, sigma] + h[n], X[c, sigma])
-                mean_1 = integrate.dblquad(integrand_flat_prior, 0, 5 * X[c, sigma], lambda x: Y[c, sigma] - 5,
-                                           lambda x: Y[c, sigma] + 5, args=(y_bar, h, N))[0]
-                mean_2 = analytical_flat_prior(y_bar, h, N)
-                Z[c, sigma] = abs(mean_1 - mean_2) / mean_2
-    if prior == 'normal_gamma':
-        mu = 0
-        kappa = 1
-        alpha = 1
-        beta = 1
-        Int_const = beta ** alpha * np.sqrt(kappa)
-        Int_const = Int_const / (scipy.special.gamma(alpha) * (2 * np.pi) ** ((N + 1) / 2))
-        for sigma in range(size):
-            for c in range(size):
-                for n in range(N):
-                    y_bar[n] = np.random.normal(Y[c, sigma] + h[n], X[c, sigma])
-                mean_1 = integrate.dblquad(integrand_normal_gamma, 0, 10, lambda x: Y[c, sigma] - 5,
-                                           lambda x: Y[c, sigma] + 5, args=(y_bar, h, mu, kappa, alpha, beta))[0] \
-                         * Int_const
-                mean_2 = analytical_normal_gamma_prior(y_bar, h, mu, kappa, alpha, beta)
-                Z[c, sigma] = abs(mean_1 - mean_2) / (mean_2 + 1e-12)
-    out = [X, Y, Z]
-    return out
-
-
-def relative_error_crm(prior, N=10, size=20):
-    """
-
-    :param prior:
-    :param N:
-    :param size:
-    :return:
-    """
-    X = np.linspace(-10, 10, size)
-    Y = np.empty(size)
-    h = np.empty(N)
-    y_bar = np.empty(N)
-    theta = np.array((1, 1))
-    sigma = 0.2
-    if prior == 'flat':
-        for c in range(size):
-            for n in range(N):
-                h[n] = X_2(n + 1, theta)
-                y_bar[n] = np.random.normal(X[c] + h[n], sigma)
-            mean_1 = integrate.dblquad(integrand_flat_prior, 0, 2, lambda x: X[c] - 5,
-                                       lambda x: X[c] + 5, args=(y_bar, h, N))[0]
-            mean_2 = analytical_flat_prior(y_bar, h, N)
-            Y[c] = abs(mean_1 - mean_2) / mean_2
-    if prior == 'normal_gamma':
-        mu = 0
-        kappa = 1
-        alpha = 1
-        beta = 1
-        Int_const = beta ** alpha * np.sqrt(kappa)
-        Int_const = Int_const / (scipy.special.gamma(alpha) * (2 * np.pi) ** ((N + 1) / 2))
-        for c in range(size):
-            for n in range(N):
-                h[n] = X_2(n + 1, theta)
-                y_bar[n] = np.random.normal(X[c] + h[n], sigma)
-            mean_1 = integrate.dblquad(integrand_normal_gamma, 0, 2, lambda x: X[c] - 5,
-                                       lambda x: X[c] + 5, args=(y_bar, h, mu, kappa, alpha, beta))[0] \
-                     * Int_const
-            mean_2 = analytical_normal_gamma_prior(y_bar, h, mu, kappa, alpha, beta)
-            Y[c] = abs(mean_1 - mean_2) / mean_2
-    out = [X, Y]
-    return out
-
-
-def numerical_testing(model='srm', prior='flat'):
-    """
-    General environment for numerical testing. We evaluate the relative error for several values of sigma and c.
-    The error is plotted against the changing values of c and sigma.
-    :param prior: flat or normal gamma
-    :param model: determines model - either sample regression or conversion reaction
-    :return: plot    of the relative error
-    """
-    if model == 'crm':
-        if prior == 'flat':
-            return relative_error_crm('flat')
-        else:
-            return relative_error_crm('normal_gamma')
-    else:
-        if prior == 'flat':
-            return relative_error_srm('flat')
-        else:
-            return relative_error_srm('normal_gamma')
+    fig = plt.figure(figsize=(12, 5))
+    ax = plt.subplot()
+    if noise == 'Gaussian':
+        Generator = np.random.default_rng()
+        offset = np.linspace(-10, 10, 20)
+        precision = np.arange(0.25, 5.25, 0.25)
+        measurement = np.ones((20, 20, 10))
+        error = np.zeros((20, 20))
+        for i, prec in enumerate(precision):
+            for j, c in enumerate(offset):
+                for n in range(1, 11):
+                    measurement[i, j, n-1] = Generator.normal(c + n, np.sqrt(1 / prec))
+                analytical = analytical_normal_gamma_prior(measurement[i, j, :])
+                numerical = integrate.dblquad(integrand_normal_gamma, 0, 20, lambda x: -20, lambda x: 20,
+                                              args=([measurement[i, j, :]]))[0]
+                error[i, j] = abs(analytical - numerical) / analytical
+        ax = sns.heatmap(error, cmap='coolwarm', ax=ax)
+        plt.savefig(fname=d + '\\plots\\relative_error_gaussian_noise.png')
 
 
 def main():
-    # result_1 = numerical_testing('srm', 'flat')
-    result_2 = numerical_testing('srm', 'normal_gamma')
-    k = 1
+    """
+    Main
+    """
+    relative_error()
 
 
 if __name__ == "__main__":

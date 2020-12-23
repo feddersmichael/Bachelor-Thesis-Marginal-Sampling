@@ -1,3 +1,7 @@
+"""
+Several functions to convert or plot results from our sample process
+"""
+
 import pypesto
 import pypesto.petab
 import pypesto.sample as sample
@@ -9,7 +13,6 @@ import numpy as np
 import pickle
 import os
 import matplotlib.pyplot as plt
-import matplotlib
 import pandas as pd
 
 d = os.getcwd()
@@ -81,7 +84,7 @@ def result_generator(result_type: str = None, sample_result: str = None):
     """
     Transforms a sample_result into a proper Result object
     :param result_type: Defines the object function we use
-    :param sample_result: if given aleady includes the sample_result into the new Result object
+    :param sample_result: if given already includes the sample_result into the new Result object
     :return: the generated Result object
     """
     if result_type == 'CR_FP':
@@ -171,7 +174,7 @@ def merge_and_plot(start_sample: str = None, amount_samples: int = 10, save: boo
 
     for n in range(amount_samples):
         with open(start_sample[:-8] + str(n) + '.pickle',
-                  'rb') as infile_1:  # TODO Poblem might arise if start has double digit number 8->9
+                  'rb') as infile_1:  # TODO Problem might arise if start has double digit number 8->9
             data_full_sampling[n] = pickle.load(infile_1)[0]
             length += np.shape(data_full_sampling[n].trace_x)[1] - data_full_sampling[n].burn_in
 
@@ -208,13 +211,18 @@ def merge_and_plot(start_sample: str = None, amount_samples: int = 10, save: boo
 
     if visualization:
         visualisation('trace', d + '\\Results_' + result_type + '\\merged_data.pickle', save=True, savename='merged')
-        visualisation('1dmarginals', d + '\\Results_' + result_type + '\\merged_data.pickle', save=True,
+        visualisation('1d_marginals', d + '\\Results_' + result_type + '\\merged_data.pickle', save=True,
                       savename='merged')
         visualisation('parameters', d + '\\Results_' + result_type + '\\merged_data.pickle', save=True,
                       savename='merged')
 
 
 def one_dimensional_marginal(model: str = 'CR', save: bool = True):
+    """
+    Creates overlapping 1d_marginal plot
+    :param model: Which model we use
+    :param save: Whether the result shall be saved
+    """
     if model == 'CR':
         problem_1 = standard_sampling_CR()
         problem_2 = marginal_sampling_CR()
@@ -258,6 +266,11 @@ def one_dimensional_marginal(model: str = 'CR', save: bool = True):
 
 
 def boxplot(mode: str = 'CPU', model: str = 'CR'):
+    """
+    Creates a boxplot
+    :param mode:
+    :param model:
+    """
     if model == 'CR':
         problem_1 = standard_sampling_CR()
         problem_2 = marginal_sampling_CR()
@@ -279,16 +292,16 @@ def boxplot(mode: str = 'CPU', model: str = 'CR'):
     CPU_time = deepcopy(eff_sample_size_per_CPU)
     for n in range(amount_samples):
         with open(d + '\\Results' + storage_ID + '_FP\\result_' + storage_ID + '_FP_' + str(n) + '.pickle', 'rb') \
-            as infile_1:
+                as infile_1:
             Result_FP.sample_result = pickle.load(infile_1)
-            eff_sample_size_per_CPU[0][n] = pypesto.sample.effective_sample_size(Result_FP) \
-                                            / Result_FP.sample_result.time
+            eff_sample_size_per_CPU[0][n] = pypesto.sample.effective_sample_size(Result_FP) / \
+                                            Result_FP.sample_result.time
             CPU_time[0][n] = Result_FP.sample_result.time
         with open(d + '\\Results' + storage_ID + '_MP\\result_' + storage_ID + '_MP_' + str(n) + '.pickle', 'rb') \
-            as infile_2:
+                as infile_2:
             Result_MP.sample_result = pickle.load(infile_2)
-            eff_sample_size_per_CPU[1][n] = pypesto.sample.effective_sample_size(Result_MP) \
-                                            / Result_MP.sample_result.time
+            eff_sample_size_per_CPU[1][n] = pypesto.sample.effective_sample_size(Result_MP) / \
+                                            Result_MP.sample_result.time
             CPU_time[1][n] = Result_MP.sample_result.time
 
     if mode == 'CPU' or mode == 'both':
@@ -305,116 +318,11 @@ def boxplot(mode: str = 'CPU', model: str = 'CR'):
         plt.show()
 
 
-def trace_plot(model: str = 'CR', sampling_type: str = 'FP', sample_selection=None, save: bool = False):
-    if sample_selection is None:
-        sample_selection = [0]
-    if model == 'CR':
-        if sampling_type == 'FP':
-            problem = standard_sampling_CR()
-        elif sampling_type == 'MP':
-            problem = marginal_sampling_CR()
-    elif model == 'mRNA':
-        if sampling_type == 'FP':
-            problem = standard_sampling_mRNA()
-        elif sampling_type == 'MP':
-            problem = marginal_sampling_mRNA()
-
-    fig = plt.figure(figsize=(12, 5))
-    ax = plt.subplot()
-    Result = pypesto.Result(problem)
-    if sample_selection == 'merge':
-        with open(d + '\\Results_' + model + '_' + sampling_type
-                  + '\\merged_data_' + model + '_' + sampling_type + '.pickle', 'rb')as infile:
-            Result.sample_result = pickle.load(infile)
-        ax = visualize.sampling_fval_trace(Result, size=(12, 5), full_trace=True)
-        if save:
-            plt.savefig(fname=d + '\\plots\\' + model + '_' + sampling_type + '\\trace_plot_merge.png')
-    else:
-        for n in sample_selection:
-            with open(d + '\\Results_' + model + '_' + sampling_type
-                      + '\\result' + '_' + model + '_' + sampling_type + '_' + str(n) + '.pickle', 'rb')as infile:
-                Result.sample_result = pickle.load(infile)
-            ax = visualize.sampling_fval_trace(Result, size=(12, 5), full_trace=True)
-            if save:
-                plt.savefig(fname=d + '\\plots\\' + model + '_' + sampling_type + '\\' + 'trace_' + str(n) + '.png')
-            # plt.show()
-
-
-def parameters_plot(model: str = 'CR', sampling_type: str = 'FP', sample_selection=None, save: bool = False):
-    if sample_selection is None:
-        sample_selection = [0]
-    if model == 'CR':
-        if sampling_type == 'FP':
-            problem = standard_sampling_CR()
-        elif sampling_type == 'MP':
-            problem = marginal_sampling_CR()
-    elif model == 'mRNA':
-        if sampling_type == 'FP':
-            problem = standard_sampling_mRNA()
-        elif sampling_type == 'MP':
-            problem = marginal_sampling_mRNA()
-
-    fig = plt.figure(figsize=(12, 5))
-    ax = plt.subplot()
-    Result = pypesto.Result(problem)
-    if sample_selection == 'merge':
-        with open(d + '\\Results_' + model + '_' + sampling_type
-                  + '\\merged_data_' + model + '_' + sampling_type + '.pickle', 'rb')as infile:
-            Result.sample_result = pickle.load(infile)
-        ax = visualize.sampling_parameters_trace(Result, size=(12, 5), use_problem_bounds=False, full_trace=True)
-        if save:
-            plt.savefig(fname=d + '\\plots\\' + model + '_' + sampling_type + '\\parameters_plot_merge.png')
-    else:
-        for n in sample_selection:
-            with open(d + '\\Results_' + model + '_' + sampling_type
-                      + '\\result' + '_' + model + '_' + sampling_type + '_' + str(n) + '.pickle', 'rb')as infile:
-                Result.sample_result = pickle.load(infile)
-            ax = visualize.sampling_parameters_trace(Result, size=(12, 5), use_problem_bounds=False, full_trace=True)
-            if save:
-                plt.savefig(fname=d + '\\plots\\' + model + '_' + sampling_type + '\\'
-                                  + 'sampling_parameters_' + str(n) + '.png')
-            # plt.show()
-
-
-def one_d_marginals_plot(model: str = 'CR', sampling_type: str = 'FP', sample_selection=None, save: bool = False):
-    if sample_selection is None:
-        sample_selection = [0]
-    if model == 'CR':
-        if sampling_type == 'FP':
-            problem = standard_sampling_CR()
-        elif sampling_type == 'MP':
-            problem = marginal_sampling_CR()
-    elif model == 'mRNA':
-        if sampling_type == 'FP':
-            problem = standard_sampling_mRNA()
-        elif sampling_type == 'MP':
-            problem = marginal_sampling_mRNA()
-
-    fig = plt.figure(figsize=(12, 5))
-    ax = plt.subplot()
-    Result = pypesto.Result(problem)
-    if sample_selection == 'merge':
-        with open(d + '\\Results_' + model + '_' + sampling_type
-                  + '\\merged_data_' + model + '_' + sampling_type + '.pickle', 'rb')as infile:
-            Result.sample_result = pickle.load(infile)
-        ax = visualize.sampling_1d_marginals(Result, size=(12, 5))
-        if save:
-            plt.savefig(fname=d + '\\plots\\' + model + '_' + sampling_type + '\\one_d_marginals_merge.png')
-    else:
-        for n in sample_selection:
-            with open(d + '\\Results_' + model + '_' + sampling_type
-                      + '\\result' + '_' + model + '_' + sampling_type + '_' + str(n) + '.pickle', 'rb')as infile:
-                Result.sample_result = pickle.load(infile)
-            ax = visualize.sampling_1d_marginals(Result, size=(12, 5))
-            if save:
-                plt.savefig(fname=d + '\\plots\\' + model + '_' + sampling_type + '\\'
-                                  + 'one_d_marginals_' + str(n) + '.png')
-            # plt.show()
-
-
 def main():
-    path = d + '\\Results_CR_MP\\result_CR_MP_0.pickle'
-    merge_and_plot(path, 50, True, True)
+    """
+    Main
+    """
+
 
 
 main()
