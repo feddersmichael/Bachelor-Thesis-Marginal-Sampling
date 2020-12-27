@@ -86,19 +86,10 @@ def relative_error(noise: str = 'Gaussian', prior: str = 'normal-gamma'):
         plt.savefig(fname=d + '\\plots\\relative_error_gaussian_noise.png')
 
 
-def some_checks():
-    a = np.array([2, 2])
-    b = np.array([3, 3])
-    c = (a + b)**2
-    e = np.sum(c)
-    d = 0
-
-
 def main():
     """
     Main
     """
-    # some_checks()
     relative_error()
 
 
