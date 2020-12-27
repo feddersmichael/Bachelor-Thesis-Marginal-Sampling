@@ -7,6 +7,7 @@ import numpy as np
 import scipy.special as special
 import matplotlib.pyplot as plt
 import seaborn as sns
+import pandas as pd
 import os
 
 d = os.getcwd()
@@ -27,9 +28,10 @@ def integrand_normal_gamma(offset, precision, measurement):
     observable = np.array(range(1, 11))
 
     factor_0 = precision ** (alpha + (N - 1) / 2)
-    factor_1 = np.sum((measurement[0] - observable - offset) ** 2) * (precision / 2)
+    factor_1 = np.sum((measurement - observable - offset) ** 2)
     factor_2 = kappa * offset ** 2 + 2 * beta
-    return factor_0 * np.exp(factor_2 - factor_1)
+    result = factor_0 * np.exp(-(precision / 2) * (factor_1 + factor_2))
+    return result
 
 
 def analytical_normal_gamma_prior(measurement):
@@ -55,7 +57,7 @@ def analytical_normal_gamma_prior(measurement):
 
 def relative_error(noise: str = 'Gaussian', prior: str = 'normal-gamma'):
     """
-    Calculating teh relative error between our analytical derivation and the numerical integration
+    Calculating the relative error between our analytical derivation and the numerical integration
     :param noise: Which noise we consider
     :param prior: Which prior was chosen
     """
@@ -63,26 +65,40 @@ def relative_error(noise: str = 'Gaussian', prior: str = 'normal-gamma'):
     ax = plt.subplot()
     if noise == 'Gaussian':
         Generator = np.random.default_rng()
-        offset = np.linspace(-10, 10, 20)
-        precision = np.arange(0.25, 5.25, 0.25)
-        measurement = np.ones((20, 20, 10))
-        error = np.zeros((20, 20))
-        for i, prec in enumerate(precision):
-            for j, c in enumerate(offset):
-                for n in range(1, 11):
-                    measurement[i, j, n-1] = Generator.normal(c + n, np.sqrt(1 / prec))
-                analytical = analytical_normal_gamma_prior(measurement[i, j, :])
-                numerical = integrate.dblquad(integrand_normal_gamma, 0, 20, lambda x: -20, lambda x: 20,
-                                              args=([measurement[i, j, :]]))[0]
-                error[i, j] = abs(analytical - numerical) / analytical
-        ax = sns.heatmap(error, cmap='coolwarm', ax=ax)
+        df = [np.zeros(21 * 20), np.zeros(21 * 20), np.zeros(21 * 20)]
+        for n, value in enumerate(np.linspace(-10, 10, 21)):
+            df[0][n * 20:(n + 1) * 20] = value
+        precision = [n / 10 for n in range(1, 21)]
+        for n, value in enumerate(df[1]):
+            df[1][n] = precision[n % 20]
+        measurement = [np.ones(10)]
+        for i, value in enumerate(df[2]):
+            for n in range(1, 11):
+                measurement[0][n-1] = Generator.normal(df[0][i] + n, np.sqrt(1 / df[1][i]))
+            analytical = analytical_normal_gamma_prior(measurement[0])
+            numerical = integrate.dblquad(integrand_normal_gamma, 0, 5, lambda x: -20, lambda x: 20
+                                          , args=measurement)[0]
+            df[2][i] = abs(analytical - numerical) / analytical
+            print(str(i))
+        df = pd.DataFrame({'offset': df[0], 'precision': df[1], 'error': df[2]})
+        pivot = df.pivot(index='offset', columns='precision', values='error')
+        ax = sns.heatmap(pivot, vmin=0.0, vmax=0.1, cmap='coolwarm', ax=ax, linewidths=.5)
         plt.savefig(fname=d + '\\plots\\relative_error_gaussian_noise.png')
+
+
+def some_checks():
+    a = np.array([2, 2])
+    b = np.array([3, 3])
+    c = (a + b)**2
+    e = np.sum(c)
+    d = 0
 
 
 def main():
     """
     Main
     """
+    # some_checks()
     relative_error()
 
 
