@@ -224,21 +224,24 @@ def one_dimensional_marginal(model: str = 'CR', save: bool = True):
     :param save: Whether the result shall be saved
     """
     if model == 'CR':
-        problem_1 = standard_sampling_CR()
-        problem_2 = marginal_sampling_CR()
-        storage_ID = '_CR'
+        path_FP = d + '\\Results_CR_FP\\merged_data_CR_FP.pickle'
+        path_MP_1 = d + '\\Results_CR_MP\\merged_data_CR_MP.pickle'
+        path_MP_2 = d + '\\Results_CR_MP\\offset_and_precision.pickle'
     elif model == 'mRNA':
-        problem_1 = standard_sampling_mRNA()
-        problem_2 = marginal_sampling_mRNA()
-        storage_ID = '_mRNA'
+        path_FP = d + '\\Results_mRNA_FP\\merged_data_mRNA_FP.pickle'
+        path_MP_1 = d + '\\Results_mRNA_MP\\merged_data_mRNA_MP.pickle'
+        path_MP_2 = d + '\\Results_mRNA_MP\\offset_and_precision.pickle'
 
-    data = [pypesto.Result(problem_1), pypesto.Result(problem_2)]
-    with open(d + '\\Results' + storage_ID + '_FP\\merged_data' + storage_ID + '_FP.pickle', 'rb') as data_file:
-        data[0].sample_result = pickle.load(data_file)
-    with open(d + '\\Results' + storage_ID + '_MP\\merged_data' + storage_ID + '_MP.pickle', 'rb') as data_file:
-        data[1].sample_result = pickle.load(data_file)
+    data_samples = [0, 0]
+    with open(path_FP, 'rb') as data_file:
+        samplefile = pickle.load(data_file)
+        data_samples[0] = result_generator(samplefile[1], samplefile[0])
 
-    nr_params, params_fval, _, _, param_names = visualize.sampling.get_data_to_plot(result=data[0], i_chain=0,
+    with open(path_MP_1, 'rb') as data_file:
+        samplefile = pickle.load(data_file)
+        data_samples[1] = result_generator(samplefile[1], samplefile[0])
+
+    nr_params, params_fval, _, _, param_names = visualize.sampling.get_data_to_plot(result=data_samples[0], i_chain=0,
                                                                                     stepsize=1)
 
     num_row = int(np.round(np.sqrt(nr_params)))
@@ -250,19 +253,33 @@ def one_dimensional_marginal(model: str = 'CR', save: bool = True):
     sns.set(style="ticks")
 
     for idx, par_id in enumerate(param_names):
-        sns.distplot(params_fval[par_id], rug=True, ax=par_ax[par_id])
+        if idx != 0:
+            sns.distplot(params_fval[par_id], rug=True, ax=par_ax[par_id])
 
-        par_ax[par_id].set_xlabel(param_names[idx])
-        par_ax[par_id].set_ylabel('Density')
+            par_ax[par_id].set_xlabel(param_names[idx])
+            par_ax[par_id].set_ylabel('Density')
+        else:
+            sns.distplot(params_fval[par_id], rug=True, ax=par_ax[par_id], label='FP-approach')
 
-    _, params_fval, _, _, param_names = visualize.sampling.get_data_to_plot(result=data[1], i_chain=0, stepsize=1)
+            par_ax[par_id].set_xlabel(param_names[idx])
+            par_ax[par_id].set_ylabel('Density')
+
+    _, params_fval, _, _, param_names = visualize.sampling.get_data_to_plot(result=data_samples[1], i_chain=0, stepsize=1)
 
     for n in param_names:
         sns.distplot(params_fval[n], rug=True, ax=par_ax[n])
 
+    with open(path_MP_2, 'rb') as file:
+        samples = pickle.load(file)
+
+    sns.distplot(samples[0], rug=True, ax=par_ax['offset'], label='MP-approach')
+    sns.distplot(samples[1], rug=True, ax=par_ax['precision'])
+
     sns.despine()
     fig.tight_layout()
-    # plt.show()
+    fig.legend(bbox_to_anchor=(0.5, -0.03), loc='upper center', mode='expand', ncol=2, borderaxespad=0)
+    if save:
+        plt.savefig(fname='plots\\combination\\' + model + '\\overlap_plot_' + model + '.png', bbox_inches="tight")
 
 
 def boxplot(mode: str = 'CPU', model: str = 'CR'):
@@ -292,13 +309,13 @@ def boxplot(mode: str = 'CPU', model: str = 'CR'):
     CPU_time = deepcopy(eff_sample_size_per_CPU)
     for n in range(amount_samples):
         with open(d + '\\Results' + storage_ID + '_FP\\result_' + storage_ID + '_FP_' + str(n) + '.pickle', 'rb') \
-                as infile_1:
+            as infile_1:
             Result_FP.sample_result = pickle.load(infile_1)
             eff_sample_size_per_CPU[0][n] = pypesto.sample.effective_sample_size(Result_FP) / \
                                             Result_FP.sample_result.time
             CPU_time[0][n] = Result_FP.sample_result.time
         with open(d + '\\Results' + storage_ID + '_MP\\result_' + storage_ID + '_MP_' + str(n) + '.pickle', 'rb') \
-                as infile_2:
+            as infile_2:
             Result_MP.sample_result = pickle.load(infile_2)
             eff_sample_size_per_CPU[1][n] = pypesto.sample.effective_sample_size(Result_MP) / \
                                             Result_MP.sample_result.time
@@ -322,7 +339,8 @@ def main():
     """
     Main
     """
-
+    # visualisation('1dmarginals', d + '\\Results_CR_MP\\result_CR_MP_30.pickle', show=True)
+    one_dimensional_marginal()
 
 
 main()

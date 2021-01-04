@@ -26,13 +26,13 @@ nt = len(times)
 simulations = [analytical_b(t, a0=a0, b0=b0, k1=k1, k2=k2)
                for t in times]
 sigma = 0.015
-#measurements = (sc + np.asarray(simulations)) + sigma * np.random.randn(nt)
-#measurements = measurements.clip(0.)
+# measurements = (sc + np.asarray(simulations)) + sigma * np.random.randn(nt)
+# measurements = measurements.clip(0.)
 
 offset = 1
 
 measurements = np.asarray([0.0219, 0.4442, 0.5840, 0.6951, 0.7249, 0.7242, 0.7398, 0.7506, 0.7843, 0.7768, 0.7359])
-measurements = measurements + offset
+measurements += offset
 
 measurement_df = pd.DataFrame(data={
     OBSERVABLE_ID: ['obs_b'] * nt,
@@ -59,7 +59,6 @@ parameter_df = pd.DataFrame(data={
     ESTIMATE: [1, 1, 1, 1],
 }).set_index(PARAMETER_ID)
 
-
 petab.write_condition_df(condition_df, "SS_conditions.tsv")
 petab.write_measurement_df(measurement_df, "SS_measurements.tsv")
 petab.write_observable_df(observable_df, "SS_observables.tsv")
@@ -80,9 +79,6 @@ petab.write_yaml(yaml_config, "SS_conversion_reaction.yaml")
 # validate written PEtab files
 problem = petab.Problem.from_yaml("SS_conversion_reaction.yaml")
 petab.lint_problem(problem)
-
-
-
 
 measurement_df = pd.DataFrame(data={
     OBSERVABLE_ID: ['obs_b'] * nt,
@@ -106,7 +102,6 @@ parameter_df = pd.DataFrame(data={
     NOMINAL_VALUE: [k1, k2],
     ESTIMATE: [1, 1],
 }).set_index(PARAMETER_ID)
-
 
 petab.write_condition_df(condition_df, "HS_conditions.tsv")
 petab.write_measurement_df(measurement_df, "HS_measurements.tsv")

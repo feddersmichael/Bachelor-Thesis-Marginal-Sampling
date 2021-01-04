@@ -82,7 +82,8 @@ def relative_error(noise: str = 'Gaussian', prior: str = 'normal-gamma'):
             print(str(i))
         df = pd.DataFrame({'offset': df[0], 'precision': df[1], 'error': df[2]})
         pivot = df.pivot(index='offset', columns='precision', values='error')
-        ax = sns.heatmap(pivot, vmin=0.0, vmax=0.1, cmap='coolwarm', ax=ax, linewidths=.5)
+        ax = sns.heatmap(pivot, vmin=0.0, vmax=0.1, cmap='coolwarm', ax=ax, linewidths=.5,
+                         cbar_kws={'label': 'relative error'})
         plt.savefig(fname=d + '\\plots\\relative_error_gaussian_noise.png')
 
 

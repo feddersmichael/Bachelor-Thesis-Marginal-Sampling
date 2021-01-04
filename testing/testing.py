@@ -10,13 +10,12 @@ dx, dy = 0.05, 0.05
 y, x = np.mgrid[slice(1, 5 + dy, dy),
                 slice(1, 5 + dx, dx)]
 
-z = np.sin(x)**10 + np.cos(10 + y*x) * np.cos(x)
+z = np.sin(x) ** 10 + np.cos(10 + y * x) * np.cos(x)
 
 # x and y are bounds, so z should be the value *inside* those bounds.
 # Therefore, remove the last value from the z array.
 z = z[:-1, :-1]
 levels = MaxNLocator(nbins=15).tick_values(z.min(), z.max())
-
 
 # pick the desired colormap, sensible levels, and define a normalization
 # instance which takes data values and translates those into levels.
@@ -29,11 +28,10 @@ im = ax0.pcolormesh(x, y, z, cmap=cmap, norm=norm)
 fig.colorbar(im, ax=ax0)
 ax0.set_title('pcolormesh with levels')
 
-
 # contours are *point* based plots, so convert our bound into point
 # centers
-cf = ax1.contourf(x[:-1, :-1] + dx/2.,
-                  y[:-1, :-1] + dy/2., z, levels=levels,
+cf = ax1.contourf(x[:-1, :-1] + dx / 2.,
+                  y[:-1, :-1] + dy / 2., z, levels=levels,
                   cmap=cmap)
 fig.colorbar(cf, ax=ax1)
 ax1.set_title('contourf with levels')
