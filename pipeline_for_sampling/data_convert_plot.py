@@ -113,11 +113,11 @@ def burn_in_change(path: str = None, burn_in: int = None):
     """
     Changes the burn_in parameter manually if the Geweke test is not working properly
     :param path:path of the file we want to change
-    :param burn_in: addition of steps to previous burn_in index
+    :param burn_in: new burn in index
     """
     with open(path, 'rb') as infile:
         samplefile = pickle.load(infile)
-    samplefile[0].burn_in += burn_in
+    samplefile[0].burn_in = burn_in
     with open(path, 'wb') as outfile:
         pickle.dump(samplefile, outfile)
 
@@ -138,24 +138,25 @@ def visualisation(mode: str = None, path: str = None, save: bool = False, savena
     if mode == 'trace':
         sample_result = result_generator(samplefile[1], samplefile[0])
         ax = visualize.sampling_fval_trace(sample_result, size=(12, 5), full_trace=True)
-        if save:
-            plt.savefig(fname=d + '\\plots\\' + samplefile[1] + '\\' + savename + '_trace.png')
         if show:
             plt.show()
-    elif mode == '1dmarginals':
+        if save:
+            plt.savefig(fname=d + '\\plots\\' + samplefile[1] + '\\' + savename + '.png')
+    elif mode == '1d_marginals':
         sample_result = result_generator(samplefile[1], samplefile[0])
         ax = visualize.sampling_1d_marginals(sample_result, size=(12, 5))
-        if save:
-            plt.savefig(fname=d + '\\plots\\' + samplefile[1] + '\\' + savename + '_1dmarginals.png')
         if show:
             plt.show()
+        if save:
+            plt.savefig(fname=d + '\\plots\\' + samplefile[1] + '\\' + savename + '.png')
     elif mode == 'parameters':
         sample_result = result_generator(samplefile[1], samplefile[0])
         ax = visualize.sampling_parameters_trace(sample_result, size=(12, 5), use_problem_bounds=False, full_trace=True)
-        if save:
-            plt.savefig(fname=d + '\\plots\\' + samplefile[1] + '\\' + savename + '_parameters.png')
         if show:
             plt.show()
+        if save:
+            plt.savefig(fname=d + '\\plots\\' + samplefile[1] + '\\' + savename + '.png')
+        x = 0
 
 
 def merge_and_plot(start_sample: str = None, amount_samples: int = 10, save: bool = False, visualization: bool = False):
@@ -206,15 +207,19 @@ def merge_and_plot(start_sample: str = None, amount_samples: int = 10, save: boo
             = data_full_sampling[n].trace_neglogprior[0, burn_in:]
         index += converge_size
     if save:
-        with open(d + '\\Results_' + result_type + '\\merged_data.pickle', 'wb') as save_file:
+        with open(d + '\\Results_' + result_type + '\\merged_data_' + result_type + '.pickle', 'wb') as save_file:
             pickle.dump([merged_data.sample_result, result_type], save_file)
 
     if visualization:
-        visualisation('trace', d + '\\Results_' + result_type + '\\merged_data.pickle', save=True, savename='merged')
-        visualisation('1d_marginals', d + '\\Results_' + result_type + '\\merged_data.pickle', save=True,
-                      savename='merged')
-        visualisation('parameters', d + '\\Results_' + result_type + '\\merged_data.pickle', save=True,
-                      savename='merged')
+        print('trace')
+        visualisation('trace', d + '\\Results_' + result_type + '\\merged_data_' + result_type + '.pickle', save=True,
+                      savename='merged_trace_' + result_type)
+        print('1d_marginals')
+        visualisation('1d_marginals', d + '\\Results_' + result_type + '\\merged_data_' + result_type + '.pickle',
+                      save=True, savename='merged_1d_marginals_' + result_type)
+        print('parameters')
+        visualisation('parameters', d + '\\Results_' + result_type + '\\merged_data_' + result_type + '.pickle',
+                      save=True, savename='merged_parameters_' + result_type)
 
 
 def one_dimensional_marginal(model: str = 'CR', save: bool = True):
@@ -264,7 +269,8 @@ def one_dimensional_marginal(model: str = 'CR', save: bool = True):
             par_ax[par_id].set_xlabel(param_names[idx])
             par_ax[par_id].set_ylabel('Density')
 
-    _, params_fval, _, _, param_names = visualize.sampling.get_data_to_plot(result=data_samples[1], i_chain=0, stepsize=1)
+    _, params_fval, _, _, param_names = visualize.sampling.get_data_to_plot(result=data_samples[1], i_chain=0,
+                                                                            stepsize=1)
 
     for n in param_names:
         sns.distplot(params_fval[n], rug=True, ax=par_ax[n])
@@ -288,6 +294,7 @@ def boxplot(mode: str = 'CPU', model: str = 'CR'):
     :param mode:
     :param model:
     """
+    # TODO: recalculate effective sample size
     if model == 'CR':
         problem_1 = standard_sampling_CR()
         problem_2 = marginal_sampling_CR()
@@ -339,8 +346,6 @@ def main():
     """
     Main
     """
-    # visualisation('1dmarginals', d + '\\Results_CR_MP\\result_CR_MP_30.pickle', show=True)
-    one_dimensional_marginal()
 
 
 main()
