@@ -15,7 +15,7 @@ petab_problem = petab.Problem.from_yaml(
     "conversion_reaction/SS_conversion_reaction.yaml")
 tvec = np.asarray(petab_problem.measurement_df.time)
 N = len(tvec)
-data_model = np.asarray(petab_problem.measurement_df.measurement)
+measurement_data = np.asarray(petab_problem.measurement_df.measurement)
 
 
 def analytical_b(t, a0, b0, k1, k2):
@@ -65,7 +65,7 @@ def Constant(x):
     _simulation = simulate_model(np.exp(x), tvec)
     simulation = np.asarray(_simulation)
 
-    res = data_model - simulation
+    res = measurement_data - simulation
 
     summand_1 = (np.sum(res ** 2) + kappa * mu ** 2 + 2 * beta) / 2
     summand_2 = (1 / (2 * (N + kappa))) * (np.sum(res) + kappa * mu) ** 2
@@ -77,7 +77,7 @@ def mu_(x):
     _simulation = simulate_model(np.exp(x), tvec)
     simulation = np.asarray(_simulation)
 
-    res = data_model - simulation
+    res = measurement_data - simulation
     result_ = np.sum(res) + kappa * mu
     return result_ / (N + kappa)
 

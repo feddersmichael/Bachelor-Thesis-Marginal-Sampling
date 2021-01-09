@@ -346,6 +346,7 @@ def main():
     """
     Main
     """
+    one_dimensional_marginal('mRNA')
 
 
 main()
