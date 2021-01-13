@@ -2,20 +2,35 @@
 Several functions to convert or plot results from our sample process
 """
 
+import os
+import pickle
+import statistics
+from copy import deepcopy
+
+import matplotlib.pyplot as plt
+import numpy as np
+import pandas as pd
+import petab
 import pypesto
 import pypesto.petab
 import pypesto.sample as sample
 import pypesto.visualize as visualize
 import seaborn as sns
-from copy import deepcopy
-
-import numpy as np
-import pickle
-import os
-import matplotlib.pyplot as plt
-import pandas as pd
 
 d = os.getcwd()
+
+# estimated values in mRNA, linear scale
+t_0 = 1.9939041943340294
+kTLm_0 = 9.882089134453418
+xi = [0.7804683225514181, 0.20374850385622745]
+delta = [0.20375774544786057, 0.7804071490541745]
+offset_mRNA = 0.19856558250094725
+precision_mRNA = 299.8008024988325
+# estimated values in CR, linear scale
+k_1 = 0.20669033739193668
+k_2 = 0.5957098364375092
+offset_CR = 1.0148049568031505
+precision_CR = 975.4361871157674
 
 
 def negative_log_posterior():
@@ -30,6 +45,34 @@ def negative_log_marginal_posterior():
     dummy function for our problem function
     """
     pass
+
+
+def X_2_CR(t, a0=1, b0=0, k1=k_1, k2=k_2):
+    """
+    analytical solution to the X_2 parameter in the ODE model for the CR model
+    :param t:
+    :param a0:
+    :param b0:
+    :param k1:
+    :param k2:
+    :return:
+    """
+    return (k2 - k2 * np.exp(-(k2 + k1) * t)) / (k2 + k1)
+
+
+def X_2_mRNA(t, t0=t_0, kTL_m0=kTLm_0, xi_=xi[0], delta_=delta[0]):
+    """
+    analytical solution to the X_2 parameter in the ODE model for the mRNA model
+    :param delta_:
+    :param xi_:
+    :param t:
+    :param t0:
+    :param kTL_m0:
+    :return:
+    """
+    X = [np.exp(-delta_ * (t - t0)) * (t > t0),
+         kTL_m0 * (np.exp(-xi_ * (t - t0)) - np.exp(-delta_ * (t - t0))) / (delta_ - xi_) * (t > t0)]
+    return X[1]
 
 
 def standard_sampling_CR():
@@ -342,11 +385,121 @@ def boxplot(mode: str = 'CPU', model: str = 'CR'):
         plt.show()
 
 
+def parameter_estimation_mRNA():
+    """
+    calculating the median for all sampled values after the burn in for the mRNA model
+    :return: the two possibilities for the parameters
+    """
+    with open('Results_mRNA_MP\\merged_data_mRNA_MP.pickle', 'rb') as infile:
+        trace = pickle.load(infile)[0].trace_x[0, :, :]
+        t_0_list = trace[:, 0]
+        kTLm_O_list = trace[:, 1]
+        xi_list = trace[:, 2]
+        delta_list = trace[:, 3]
+    with open('Results_mRNA_MP\\offset_and_precision.pickle', 'rb') as infile:
+        offset_list, precision_list = pickle.load(infile)
+
+    offset = statistics.median(offset_list)
+    precision = statistics.median(precision_list)
+    t_0 = statistics.median(t_0_list)
+    kTLm_O = statistics.median(kTLm_O_list)
+    xi_1 = []
+    xi_2 = []
+    delta_1 = []
+    delta_2 = []
+    for n, xi in enumerate(xi_list):
+        delta = delta_list[n]
+        if -0.2 < xi < 0:
+            xi_1.append(xi)
+            delta_1.append(delta)
+        elif -0.8 < xi < -0.6:
+            xi_2.append(xi)
+            delta_2.append(delta)
+    xi_1 = statistics.median(xi_1)
+    xi_2 = statistics.median(xi_2)
+    delta_1 = statistics.median(delta_1)
+    delta_2 = statistics.median(delta_2)
+    return [[t_0, kTLm_O, xi_1, delta_1, offset, precision], [t_0, kTLm_O, xi_2, delta_2, offset, precision]]
+
+
+def parameter_estimation_CR():
+    """
+    calculating the median for all sampled values after the burn in for the CR model
+    :return: the list of the calculated parameters
+    """
+    with open('Results_CR_MP\\merged_data_CR_MP.pickle', 'rb') as infile:
+        trace = pickle.load(infile)[0].trace_x[0, :, :]
+        k_1_list = trace[:, 0]
+        k_2_list = trace[:, 1]
+    with open('Results_CR_MP\\offset_and_precision.pickle', 'rb') as infile:
+        offset_list, precision_list = pickle.load(infile)
+
+    offset = statistics.median(offset_list)
+    precision = statistics.median(precision_list)
+    k_1 = statistics.median(k_1_list)
+    k_2 = statistics.median(k_2_list)
+    return [k_1, k_2, offset, precision]
+
+
+def data_sample_comparison(mode: str = 'CR'):
+    if mode == 'CR':
+        fig = plt.figure(figsize=(12, 5))
+        ax = plt.subplot()
+        petab_problem = petab.Problem.from_yaml(
+            "conversion_reaction/SS_conversion_reaction.yaml")
+        data = np.asarray(petab_problem.measurement_df.measurement)
+        tvec = np.asarray(petab_problem.measurement_df.time)
+        x = np.linspace(0, 10, 1001)
+        function = np.zeros(1001)
+        for n, value in enumerate(x):
+            function[n] = X_2_CR(value) + offset_CR
+        df = pd.DataFrame({'time': x, 'X2': function})
+        ax = sns.lineplot(x="time", y="X2", data=df, label='estimated function')
+        sigma = np.sqrt(1 / precision_CR)
+        upper_bound = function + 3 * sigma
+        lower_bound = function - 3 * sigma
+        ax.fill_between(x, lower_bound, upper_bound, alpha=0.1, label='3 sigma c.i.')
+        df = pd.DataFrame({'time': tvec, 'X2': data})
+        sns.scatterplot(x=tvec, y=data, palette='orange', ax=ax, label='measured data')
+        ax.legend(loc=4)
+        plt.show()
+
+    if mode == 'mRNA':
+        fig = plt.figure(figsize=(12, 5))
+        ax = plt.subplot()
+        df_measurement = pd.read_csv('mRNA-transfection/data.csv', sep='\t')
+        df_measurement.Measurement += 0.2
+        x = np.linspace(0, 10, 1001)
+        function = np.zeros(1001)
+        for n, value in enumerate(x):
+            function[n] = X_2_mRNA(value) + offset_mRNA
+        df = pd.DataFrame({'time': x, 'X2': function})
+        ax = sns.lineplot(x="time", y="X2", data=df, label='estimated function')
+        sigma = np.sqrt(1 / precision_mRNA)
+        upper_bound = function + 3 * sigma
+        lower_bound = function - 3 * sigma
+        ax.fill_between(x, lower_bound, upper_bound, alpha=0.1, label='3 sigma c.i.')
+        # noinspection PyUnreachableCode
+        if False:
+            for n, value in enumerate(x):
+                function[n] = X_2_mRNA(value, delta_=delta[1], xi_=xi[1]) + offset_mRNA
+            df = pd.DataFrame({'time': x, 'X2': function})
+            ax = sns.lineplot(x="time", y="X2", data=df, label='estimated function v_2')
+            upper_bound = function + 3 * sigma
+            lower_bound = function - 3 * sigma
+            ax.fill_between(x, lower_bound, upper_bound, alpha=0.1)  # , label='3 sigma c.i. v_2'
+
+        sns.scatterplot(x=df_measurement.Time, y=df_measurement.Measurement, palette='orange', ax=ax,
+                        label='measured data')
+        ax.legend(loc=4)
+        plt.show()
+
+
 def main():
     """
     Main
     """
-    one_dimensional_marginal('mRNA')
+    data_sample_comparison('mRNA')
 
 
 main()
