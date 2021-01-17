@@ -1,12 +1,16 @@
+import os
+import pickle
+from time import process_time
+
+import matplotlib.pyplot as plt
+import numpy as np
+import petab
 import pypesto
 import pypesto.petab
 import seaborn as sns
-import matplotlib.pyplot as plt
 
-import petab
-import numpy as np
-import pickle
-import os
+plt.rcParams['text.usetex'] = True
+plt.rcParams.update({'font.size': 17})
 
 # path of the directory
 d = os.getcwd()
@@ -50,13 +54,13 @@ def negative_log_marginal_posterior():
     pass
 
 
-def marginal_sampling():
+def marginal_sampling_CR():
     """Creates a pyPESTO problem."""
     objective = pypesto.Objective(fun=negative_log_marginal_posterior)
     problem = pypesto.Problem(objective=objective,  # objective function
                               lb=[-5, -5],  # lower bounds
                               ub=[5, 5],  # upper bounds
-                              x_names=['k1', 'k2'],  # parameter names
+                              x_names=['$\log(k_1)$', '$\log(k_2)$'],  # parameter names
                               x_scales=['log', 'log'])  # parameter scale
     return problem
 
@@ -86,28 +90,26 @@ def Conversion_Reaction():
     fig, axs = plt.subplots(ncols=2, figsize=(12, 5))
 
     Generator = np.random.default_rng()
-    results = pypesto.Result(marginal_sampling())
+    results = pypesto.Result(marginal_sampling_CR())
 
     with open(d + '\\Results_CR_MP\\merged_data_CR_MP.pickle', 'rb') as infile:
         results.sample_result = pickle.load(infile)[0]
 
     precision_list = np.zeros(np.shape(results.sample_result.trace_x)[1])
+    offset_list = np.zeros(np.shape(results.sample_result.trace_x)[1])
 
+    shape = alpha + N / 2
     for index, data in enumerate(results.sample_result.trace_x[0, :, :]):
-        shape = alpha + N / 2
         scale = 1 / Constant(data)  # inverse becaus the gamma sampler uses shape, scale and not alpha, beta
         precision_list[index] = Generator.gamma(shape, scale)
 
-    sns.distplot(precision_list, rug=True, axlabel='precision', ax=axs[1])
-
-    offset_list = np.zeros(np.shape(results.sample_result.trace_x)[1])
-
-    for index, data in enumerate(results.sample_result.trace_x[0, :, :]):
         new_mu = mu_(data)
         new_sigmasquare = 1 / ((N + kappa) * precision_list[index])
         offset_list[index] = Generator.normal(new_mu, new_sigmasquare)
 
-    sns.distplot(offset_list, rug=True, axlabel='offset', ax=axs[0])
+    sns.distplot(precision_list, rug=True, axlabel='precision $\lambda$', ax=axs[1])
+
+    sns.distplot(offset_list, rug=True, axlabel='offset $c$', ax=axs[0])
 
     sns.despine(fig)
     plt.tight_layout()
@@ -115,3 +117,33 @@ def Conversion_Reaction():
 
     with open('Results_CR_MP\\offset_and_precision.pickle', 'wb')as file:
         pickle.dump([offset_list, precision_list], file)
+
+
+def time_calculation():
+    Generator = np.random.default_rng()
+    time_list = np.zeros(50)
+    results = pypesto.Result(marginal_sampling_CR())
+    for n in range(50):
+        with open('Results_CR_MP\\result_CR_MP_' + str(n) + '.pickle', 'rb') as infile:
+            results.sample_result, mode, _ = pickle.load(infile)
+        precision_list = np.zeros(np.shape(results.sample_result.trace_x)[1])
+        offset_list = np.zeros(np.shape(results.sample_result.trace_x)[1])
+        shape = alpha + N / 2
+
+        start_time = process_time()
+        for index, data in enumerate(results.sample_result.trace_x[0, :, :]):
+            scale = 1 / Constant(data)  # inverse becaus the gamma sampler uses shape, scale and not alpha, beta
+            precision_list[index] = Generator.gamma(shape, scale)
+
+            new_mu = mu_(data)
+            new_sigmasquare = 1 / ((N + kappa) * precision_list[index])
+            offset_list[index] = Generator.normal(new_mu, new_sigmasquare)
+
+        duration = process_time() - start_time
+        time_list[n] = duration
+        print(duration)
+    with open('Results_CR_MP\\time_list.pickle', 'wb') as savefile:
+        pickle.dump(time_list, savefile)
+
+
+time_calculation()

@@ -1,12 +1,16 @@
+import os
+import pickle
+from time import process_time
+
+import matplotlib.pyplot as plt
+import numpy as np
+import pandas as pd
 import pypesto
 import pypesto.petab
 import seaborn as sns
-import matplotlib.pyplot as plt
 
-import pandas as pd
-import numpy as np
-import pickle
-import os
+plt.rcParams['text.usetex'] = True
+plt.rcParams.update({'font.size': 17})
 
 # path of the directory
 d = os.getcwd()
@@ -50,13 +54,15 @@ def negative_log_marginal_posterior():
     pass
 
 
-def marginal_sampling():
+def marginal_sampling_mRNA():
     """Creates a pyPESTO problem."""
+    df = pd.read_csv('mRNA-transfection/data.csv', sep='\t')
     objective = pypesto.Objective(fun=negative_log_marginal_posterior)
     problem = pypesto.Problem(objective=objective,  # objective function
                               lb=[-2, -5, -5, -5],  # lower bounds
                               ub=[np.log10(df.Time.max()), 5, 5, 5],  # upper bounds
-                              x_names=['t_0', 'k_{TL}*m_0', 'xi', 'delta'],  # parameter names
+                              x_names=['$\log_{10}(t_1)$', '$\log_{10}(k_{TL} \cdot m_1)$', '$\log_{10}(\\xi)$',
+                                       '$\log_{10}(\delta)$'],  # parameter names
                               x_scales=['log10', 'log10', 'log10', 'log10'])  # parameter scale
     return problem
 
@@ -84,25 +90,25 @@ def mu_(x):
 def mRNA_transfection():
     fig, axs = plt.subplots(ncols=2, figsize=(12, 5))
     Generator = np.random.default_rng()
-    results = pypesto.Result(marginal_sampling())
+    results = pypesto.Result(marginal_sampling_mRNA())
 
     with open(d + '\\Results_mRNA_MP\\merged_data_mRNA_MP.pickle', 'rb') as infile:
         results.sample_result = pickle.load(infile)[0]
 
     precision_list = np.zeros(np.shape(results.sample_result.trace_x)[1])
+    offset_list = np.zeros(np.shape(results.sample_result.trace_x)[1])
 
+    shape = alpha + N / 2
     for index, data in enumerate(results.sample_result.trace_x[0, :, :]):
         if index % 1000000 == 0:
             print(index)
-        shape = alpha + N / 2
+
         scale = 1 / Constant(data)  # inverse because the gamma sampler uses shape, scale and not alpha, beta
         precision_list[index] = Generator.gamma(shape, scale)
 
     print('starting precision plot')
     sns.distplot(precision_list, rug=True, axlabel='precision', ax=axs[1])
     print('precision plot done')
-
-    offset_list = np.zeros(np.shape(results.sample_result.trace_x)[1])
 
     for index, data in enumerate(results.sample_result.trace_x[0, :, :]):
         if index % 1000000 == 0:
@@ -123,4 +129,34 @@ def mRNA_transfection():
         pickle.dump([offset_list, precision_list], file)
 
 
-mRNA_transfection()
+def time_calculation():
+    Generator = np.random.default_rng()
+    results = pypesto.Result(marginal_sampling_mRNA())
+
+    for n in range(50):
+        print(n)
+        with open('Results_mRNA_MP\\time_list.pickle', 'rb') as infile:
+            time_list = pickle.load(infile)
+        with open('Results_mRNA_MP\\result_mRNA_MP_' + str(n) + '.pickle', 'rb') as infile:
+            results.sample_result, mode = pickle.load(infile)
+        precision_list = np.zeros(np.shape(results.sample_result.trace_x)[1])
+        offset_list = np.zeros(np.shape(results.sample_result.trace_x)[1])
+        shape = alpha + N / 2
+
+        start_time = process_time()
+        for index, data in enumerate(results.sample_result.trace_x[0, :, :]):
+            scale = 1 / Constant(data)  # inverse becaus the gamma sampler uses shape, scale and not alpha, beta
+            precision_list[index] = Generator.gamma(shape, scale)
+
+            new_mu = mu_(data)
+            new_sigmasquare = 1 / ((N + kappa) * precision_list[index])
+            offset_list[index] = Generator.normal(new_mu, new_sigmasquare)
+
+        duration = process_time() - start_time
+        time_list[n] = duration
+        print(duration)
+        with open('Results_mRNA_MP\\time_list.pickle', 'rb') as savefile:
+            pickle.dump(time_list, savefile)
+
+
+time_calculation()

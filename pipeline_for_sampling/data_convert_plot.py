@@ -17,6 +17,9 @@ import pypesto.sample as sample
 import pypesto.visualize as visualize
 import seaborn as sns
 
+plt.rcParams['text.usetex'] = True
+plt.rcParams.update({'font.size': 17})
+
 d = os.getcwd()
 
 # estimated values in mRNA, linear scale
@@ -81,7 +84,8 @@ def standard_sampling_CR():
     problem = pypesto.Problem(objective=objective,  # objective function
                               lb=[-5, -5, -np.inf, 0],  # lower bounds
                               ub=[5, 5, np.inf, np.inf],  # upper bounds
-                              x_names=['k1', 'k2', 'offset', 'precision'],  # parameter names
+                              x_names=['$\log(k_1)$', '$\log(k_2)$', 'offset $c$', 'precision $\lambda$'],
+                              # parameter names
                               x_scales=['log', 'log', 'lin', 'lin'])  # parameter scale
     return problem
 
@@ -92,7 +96,7 @@ def marginal_sampling_CR():
     problem = pypesto.Problem(objective=objective,  # objective function
                               lb=[-5, -5],  # lower bounds
                               ub=[5, 5],  # upper bounds
-                              x_names=['k1', 'k2'],  # parameter names
+                              x_names=['$\log(k_1)$', '$\log(k_2)$'],  # parameter names
                               x_scales=['log', 'log'])  # parameter scale
     return problem
 
@@ -103,9 +107,10 @@ def standard_sampling_mRNA():
     objective = pypesto.Objective(fun=negative_log_posterior)
     problem = pypesto.Problem(objective=objective,  # objective function
                               lb=[-2, -5, -5, -5, -np.inf, 0],  # lower bounds
-                              ub=[np.log10(df.Time.max()), 5, 5, 5, np.inf, np.inf],  # upper bounds
-                              x_names=['t_0', 'k_{TL}*m_0', 'xi', 'delta',
-                                       'offset', 'precision'],  # parameter names
+                              ub=[np.log10(df.Time.max()), 5, 5, 5, np.inf, np.inf],
+                              # upper bounds 't', 'k', 'xi, 'delta'
+                              x_names=['$\log_{10}(t_1)$', '$\log_{10}(k_{TL} \cdot m_1)$', '$\log_{10}(\\xi)$',
+                                       '$\log_{10}(\delta)$', 'offset $c$', 'precision $\lambda$'],  # parameter names
                               x_scales=['log10', 'log10', 'log10', 'log10',
                                         'lin', 'lin'])  # parameter scale
     return problem
@@ -118,7 +123,8 @@ def marginal_sampling_mRNA():
     problem = pypesto.Problem(objective=objective,  # objective function
                               lb=[-2, -5, -5, -5],  # lower bounds
                               ub=[np.log10(df.Time.max()), 5, 5, 5],  # upper bounds
-                              x_names=['t_0', 'k_{TL}*m_0', 'xi', 'delta'],  # parameter names
+                              x_names=['$\log_{10}(t_1)$', '$\log_{10}(k_{TL} \cdot m_1)$', '$\log_{10}(\\xi)$',
+                                       '$\log_{10}(\delta)$'],  # parameter names
                               x_scales=['log10', 'log10', 'log10', 'log10'])  # parameter scale
     return problem
 
@@ -165,7 +171,7 @@ def burn_in_change(path: str = None, burn_in: int = None):
         pickle.dump(samplefile, outfile)
 
 
-def visualisation(mode: str = None, path: str = None, save: bool = False, savename: str = None, show: bool = False):
+def visualisation(mode: str, path: str, save: bool = False, savename: str = None, show: bool = False):
     """
     Visualizing sample results
     :param mode: type of visualization
@@ -178,28 +184,25 @@ def visualisation(mode: str = None, path: str = None, save: bool = False, savena
     ax = plt.subplot()
     with open(path, 'rb') as infile:
         samplefile = pickle.load(infile)
+    sample_result = result_generator(samplefile[1], samplefile[0])
     if mode == 'trace':
-        sample_result = result_generator(samplefile[1], samplefile[0])
         ax = visualize.sampling_fval_trace(sample_result, size=(12, 5), full_trace=True)
         if show:
             plt.show()
         if save:
             plt.savefig(fname=d + '\\plots\\' + samplefile[1] + '\\' + savename + '.png')
     elif mode == '1d_marginals':
-        sample_result = result_generator(samplefile[1], samplefile[0])
         ax = visualize.sampling_1d_marginals(sample_result, size=(12, 5))
         if show:
             plt.show()
         if save:
             plt.savefig(fname=d + '\\plots\\' + samplefile[1] + '\\' + savename + '.png')
     elif mode == 'parameters':
-        sample_result = result_generator(samplefile[1], samplefile[0])
         ax = visualize.sampling_parameters_trace(sample_result, size=(12, 5), use_problem_bounds=False, full_trace=True)
         if show:
             plt.show()
         if save:
             plt.savefig(fname=d + '\\plots\\' + samplefile[1] + '\\' + savename + '.png')
-        x = 0
 
 
 def merge_and_plot(start_sample: str = None, amount_samples: int = 10, save: bool = False, visualization: bool = False):
@@ -301,6 +304,7 @@ def one_dimensional_marginal(model: str = 'CR', save: bool = True):
     sns.set(style="ticks")
 
     for idx, par_id in enumerate(param_names):
+        print(idx)
         if idx != 0:
             sns.distplot(params_fval[par_id], rug=True, ax=par_ax[par_id])
 
@@ -309,20 +313,25 @@ def one_dimensional_marginal(model: str = 'CR', save: bool = True):
         else:
             sns.distplot(params_fval[par_id], rug=True, ax=par_ax[par_id], label='FP-approach')
 
+            par_ax[par_id].set_xticks([0.297, 0.300, 0.303])
             par_ax[par_id].set_xlabel(param_names[idx])
             par_ax[par_id].set_ylabel('Density')
 
     _, params_fval, _, _, param_names = visualize.sampling.get_data_to_plot(result=data_samples[1], i_chain=0,
                                                                             stepsize=1)
 
-    for n in param_names:
-        sns.distplot(params_fval[n], rug=True, ax=par_ax[n])
+    for idx, par_id in enumerate(param_names):
+        print(idx)
+        sns.distplot(params_fval[par_id], rug=True, ax=par_ax[par_id])
+        if idx == 0:
+            par_ax[par_id].set_xticks([0.297, 0.300, 0.303])
 
     with open(path_MP_2, 'rb') as file:
         samples = pickle.load(file)
-
-    sns.distplot(samples[0], rug=True, ax=par_ax['offset'], label='MP-approach')
-    sns.distplot(samples[1], rug=True, ax=par_ax['precision'])
+    print('offset')
+    sns.distplot(samples[0], rug=True, ax=par_ax['offset $c$'], label='MP-approach')
+    print('precision')
+    sns.distplot(samples[1], rug=True, ax=par_ax['precision $\lambda$'])
 
     sns.despine()
     fig.tight_layout()
@@ -337,7 +346,6 @@ def boxplot(mode: str = 'CPU', model: str = 'CR'):
     :param mode:
     :param model:
     """
-    # TODO: recalculate effective sample size
     if model == 'CR':
         problem_1 = standard_sampling_CR()
         problem_2 = marginal_sampling_CR()
@@ -374,15 +382,56 @@ def boxplot(mode: str = 'CPU', model: str = 'CR'):
     if mode == 'CPU' or mode == 'both':
         fig = plt.figure(figsize=(12, 5))
         ax = fig.add_subplot()
-        ax.boxplot(CPU_time, labels=['Full parameter', 'Marginal parameter'])
-        ax.set_ylabel('CPU-time')
+        ax.boxplot(CPU_time, labels=['FP-approach', 'MP-approach'])
+        ax.set_ylabel('CPU-time in seconds')
         plt.show()
     if mode == 'eff_ss_CPU' or mode == 'both':
         fig = plt.figure(figsize=(12, 5))
         ax = fig.add_subplot()
-        ax.boxplot(eff_sample_size_per_CPU, labels=['Full parameter', 'Marginal parameter'])
+        ax.boxplot(eff_sample_size_per_CPU, labels=['FP-approach', 'MP-approach'])
         ax.set_ylabel('Effective sample size per CPU time')
         plt.show()
+
+
+def boxplot_CR(mode: str = 'theta'):
+    fig, axs = plt.subplots(ncols=2, figsize=(12, 5))
+    amount_runs = 50
+    path = ['Results_CR_FP\\result_CR_FP_', 'Results_CR_MP\\result_CR_MP_']
+    if mode == 'all':
+        with open('Results_CR_MP\\time_list.pickle', 'rb') as infile:
+            extra_time = pickle.load(infile)
+
+    times_FP = np.zeros(amount_runs)
+    times_MP = np.zeros(amount_runs)
+    effective_SS_FP = np.zeros(amount_runs)
+    effective_SS_MP = np.zeros(amount_runs)
+
+    for n in range(amount_runs):
+        with open(path[0] + str(n) + '.pickle', 'rb') as infile:
+            sample = pickle.load(infile)
+        times_FP[n] = sample[0].time
+        effective_SS_FP[n] = sample[0].effective_sample_size
+
+        with open(path[1] + str(n) + '.pickle', 'rb') as infile:
+            sample = pickle.load(infile)
+        if mode == 'theta':
+            times_MP[n] = sample[0].time
+        elif mode == 'all':
+            times_MP[n] = sample[0].time + extra_time[n]
+        effective_SS_MP[n] = sample[0].effective_sample_size
+
+    times = [times_FP, times_MP]
+    effective_SS = [effective_SS_FP, effective_SS_MP]
+    effect_per_time = [np.divide(effective_SS_FP, times_FP), np.divide(effective_SS_MP, times_MP)]
+
+    axs[0].boxplot(times, labels=['FP-approach', 'MP-approach'])
+    axs[0].set_ylabel('CPU-time in seconds')
+    axs[0].set_yticks([0, 1, 2, 3, 4, 5])
+
+    axs[1].boxplot(effect_per_time, labels=['FP-approach', 'MP-approach'])
+    axs[1].set_ylabel('Effective sample size per CPU-time')
+
+    plt.show()
 
 
 def parameter_estimation_mRNA():
@@ -453,13 +502,12 @@ def data_sample_comparison(mode: str = 'CR'):
         function = np.zeros(1001)
         for n, value in enumerate(x):
             function[n] = X_2_CR(value) + offset_CR
-        df = pd.DataFrame({'time': x, 'X2': function})
-        ax = sns.lineplot(x="time", y="X2", data=df, label='estimated function')
+        df = pd.DataFrame({'time $t$': x, '$X_2$': function})
+        ax = sns.lineplot(x="time $t$", y="$X_2$", data=df, label='estimated function')
         sigma = np.sqrt(1 / precision_CR)
         upper_bound = function + 3 * sigma
         lower_bound = function - 3 * sigma
-        ax.fill_between(x, lower_bound, upper_bound, alpha=0.1, label='3 sigma c.i.')
-        df = pd.DataFrame({'time': tvec, 'X2': data})
+        ax.fill_between(x, lower_bound, upper_bound, alpha=0.1, label='3 $\sigma$ confidence interval')
         sns.scatterplot(x=tvec, y=data, palette='orange', ax=ax, label='measured data')
         ax.legend(loc=4)
         plt.show()
@@ -473,22 +521,12 @@ def data_sample_comparison(mode: str = 'CR'):
         function = np.zeros(1001)
         for n, value in enumerate(x):
             function[n] = X_2_mRNA(value) + offset_mRNA
-        df = pd.DataFrame({'time': x, 'X2': function})
-        ax = sns.lineplot(x="time", y="X2", data=df, label='estimated function')
+        df = pd.DataFrame({'time $t$': x, '$X_2$': function})
+        ax = sns.lineplot(x="time $t$", y="$X_2$", data=df, label='estimated function')
         sigma = np.sqrt(1 / precision_mRNA)
         upper_bound = function + 3 * sigma
         lower_bound = function - 3 * sigma
-        ax.fill_between(x, lower_bound, upper_bound, alpha=0.1, label='3 sigma c.i.')
-        # noinspection PyUnreachableCode
-        if False:
-            for n, value in enumerate(x):
-                function[n] = X_2_mRNA(value, delta_=delta[1], xi_=xi[1]) + offset_mRNA
-            df = pd.DataFrame({'time': x, 'X2': function})
-            ax = sns.lineplot(x="time", y="X2", data=df, label='estimated function v_2')
-            upper_bound = function + 3 * sigma
-            lower_bound = function - 3 * sigma
-            ax.fill_between(x, lower_bound, upper_bound, alpha=0.1)  # , label='3 sigma c.i. v_2'
-
+        ax.fill_between(x, lower_bound, upper_bound, alpha=0.1, label='3 $\sigma$ confidence interval')
         sns.scatterplot(x=df_measurement.Time, y=df_measurement.Measurement, palette='orange', ax=ax,
                         label='measured data')
         ax.legend(loc=4)
@@ -499,7 +537,14 @@ def main():
     """
     Main
     """
-    data_sample_comparison('mRNA')
+    boxplot_CR('all')
+
+    # for n in range(10, 30):
+    # visualisation('parameters', 'Results_CR_FP\\result_CR_FP_' + str(n) + '.pickle', True, 'parameter\\parameters_CR_FP_' + str(n) + '.png')
+    # visualisation('parameters', 'Results_CR_MP\\result_CR_MP_' + str(n) + '.pickle', True, 'parameter\\parameters_CR_MP_' + str(n) + '.png')
+    # visualisation('parameters', 'Results_mRNA_FP\\result_mRNA_FP_' + str(n) + '.pickle', True, 'parameter\\parameters_mRNA_FP_' + str(n))
+    # visualisation('parameters', 'Results_mRNA_MP\\result_mRNA_MP_' + str(n) + '.pickle', True, 'parameter\\parameters_mRNA_MP_' + str(n) + '.png')
+    # print(str(n))
 
 
 main()
