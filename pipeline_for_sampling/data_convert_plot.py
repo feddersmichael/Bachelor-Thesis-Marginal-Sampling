@@ -5,7 +5,6 @@ Several functions to convert or plot results from our sample process
 import os
 import pickle
 import statistics
-from copy import deepcopy
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -268,7 +267,7 @@ def merge_and_plot(start_sample: str = None, amount_samples: int = 10, save: boo
                       save=True, savename='merged_parameters_' + result_type)
 
 
-def one_dimensional_marginal(model: str = 'CR', save: bool = True):
+def overlap_plot(model: str = 'CR', save: bool = True):
     """
     Creates overlapping 1d_marginal plot
     :param model: Which model we use
@@ -340,57 +339,94 @@ def one_dimensional_marginal(model: str = 'CR', save: bool = True):
         plt.savefig(fname='plots\\combination\\' + model + '\\overlap_plot_' + model + '.png', bbox_inches="tight")
 
 
-def boxplot(mode: str = 'CPU', model: str = 'CR'):
-    """
-    Creates a boxplot
-    :param mode:
-    :param model:
-    """
-    if model == 'CR':
-        problem_1 = standard_sampling_CR()
-        problem_2 = marginal_sampling_CR()
-        states = 10001
-        amount_samples = 50
-        storage_ID = 'CR'
-    elif model == 'mRNA':
-        problem_1 = standard_sampling_mRNA()
-        problem_2 = marginal_sampling_mRNA()
-        states = 1000001
-        amount_samples = 10
-        storage_ID = 'mRNA'
+def boxplot_mRNA_auto():
+    fig, axs = plt.subplots(ncols=2, figsize=(20, 5))
+    path = ['Results_mRNA_FP\\result_mRNA_FP_']
 
-    Result_FP = pypesto.Result(problem_1)
-    Result_MP = pypesto.Result(problem_2)
-    x_1 = [0.] * states
-    x_2 = [0.] * states
-    eff_sample_size_per_CPU = [x_1, x_2]
-    CPU_time = deepcopy(eff_sample_size_per_CPU)
-    for n in range(amount_samples):
-        with open(d + '\\Results' + storage_ID + '_FP\\result_' + storage_ID + '_FP_' + str(n) + '.pickle', 'rb') \
-            as infile_1:
-            Result_FP.sample_result = pickle.load(infile_1)
-            eff_sample_size_per_CPU[0][n] = pypesto.sample.effective_sample_size(Result_FP) / \
-                                            Result_FP.sample_result.time
-            CPU_time[0][n] = Result_FP.sample_result.time
-        with open(d + '\\Results' + storage_ID + '_MP\\result_' + storage_ID + '_MP_' + str(n) + '.pickle', 'rb') \
-            as infile_2:
-            Result_MP.sample_result = pickle.load(infile_2)
-            eff_sample_size_per_CPU[1][n] = pypesto.sample.effective_sample_size(Result_MP) / \
-                                            Result_MP.sample_result.time
-            CPU_time[1][n] = Result_MP.sample_result.time
+    times_FP_conv = np.zeros(4)
+    times_FP_slight = np.zeros(4)
+    times_FP_no_conv = np.zeros(32)
+    autocorr_FP_conv = np.zeros(4)
+    autocorr_FP_slight = np.zeros(4)
+    autocorr_FP_no_conv = np.zeros(32)
 
-    if mode == 'CPU' or mode == 'both':
-        fig = plt.figure(figsize=(12, 5))
-        ax = fig.add_subplot()
-        ax.boxplot(CPU_time, labels=['FP-approach', 'MP-approach'])
-        ax.set_ylabel('CPU-time in seconds')
-        plt.show()
-    if mode == 'eff_ss_CPU' or mode == 'both':
-        fig = plt.figure(figsize=(12, 5))
-        ax = fig.add_subplot()
-        ax.boxplot(eff_sample_size_per_CPU, labels=['FP-approach', 'MP-approach'])
-        ax.set_ylabel('Effective sample size per CPU time')
-        plt.show()
+    FP_converges = [2, 20, 23, 37]
+    FP_slight_convergence = [14, 21, 28, 30]
+    FP_no_convergence = [0, 1, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 15, 16, 17, 18, 19, 22, 24, 25, 26, 27, 29, 31, 32,
+                         33, 34, 35, 36, 38, 39]
+
+    for n, values in enumerate(FP_converges):
+        with open(path[0] + str(values) + '.pickle', 'rb') as infile:
+            sample = pickle.load(infile)
+        times_FP_conv[n] = sample[0].time
+        autocorr_FP_conv[n] = sample[0].auto_correlation
+
+    for n, values in enumerate(FP_slight_convergence):
+        with open(path[0] + str(values) + '.pickle', 'rb') as infile:
+            sample = pickle.load(infile)
+        times_FP_slight[n] = sample[0].time
+        autocorr_FP_slight[n] = sample[0].auto_correlation
+
+    for n, values in enumerate(FP_no_convergence):
+        with open(path[0] + str(values) + '.pickle', 'rb') as infile:
+            sample = pickle.load(infile)
+        times_FP_no_conv[n] = sample[0].time
+        autocorr_FP_no_conv[n] = sample[0].auto_correlation
+
+    times = [times_FP_no_conv, times_FP_slight, times_FP_conv]
+    autocorr = [autocorr_FP_no_conv, autocorr_FP_slight, autocorr_FP_conv]
+
+    axs[0].boxplot(times, labels=['one mode', 'two modes temporary', 'convergence'])
+    axs[0].set_ylabel('CPU-time in seconds')
+    axs[0].set_yticks([0, 1000, 2000, 3000, 4000])
+
+    axs[1].boxplot(autocorr, labels=['one mode', 'two modes temporary', 'convergence'])
+    axs[1].set_ylabel('auto-correlation')
+
+    plt.show()
+
+
+def boxplot_mRNA(mode: str = 'theta'):
+    fig, axs = plt.subplots(ncols=2, figsize=(12, 5))
+    path = ['Results_mRNA_FP\\result_mRNA_FP_', 'Results_mRNA_MP\\result_mRNA_MP_']
+    if mode == 'all':
+        with open('Results_mRNA_MP\\time_list.pickle', 'rb') as infile:
+            extra_time = pickle.load(infile)
+
+    times_FP = np.zeros(4)
+    times_MP = np.zeros(10)
+    effective_SS_FP = np.zeros(4)
+    effective_SS_MP = np.zeros(10)
+
+    FP_converges = [2, 20, 23, 37]
+
+    for n, values in enumerate(FP_converges):
+        with open(path[0] + str(values) + '.pickle', 'rb') as infile:
+            sample = pickle.load(infile)
+        times_FP[n] = sample[0].time
+        effective_SS_FP[n] = sample[0].effective_sample_size
+
+    for n in range(10):
+        with open(path[1] + str(n) + '.pickle', 'rb') as infile:
+            sample = pickle.load(infile)
+        if mode == 'theta':
+            times_MP[n] = sample[0].time
+        elif mode == 'all':
+            times_MP[n] = sample[0].time + extra_time[n]
+        effective_SS_MP[n] = sample[0].effective_sample_size
+
+    times = [times_FP, times_MP]
+
+    effect_per_time = [np.divide(effective_SS_FP, times_FP), np.divide(effective_SS_MP, times_MP)]
+
+    axs[0].boxplot(times, labels=['FP-approach', 'MP-approach'])
+    axs[0].set_ylabel('CPU-time in seconds')
+    axs[0].set_yticks([0, 1000, 2000, 3000, 4000, 5000])
+
+    axs[1].boxplot(effect_per_time, labels=['FP-approach', 'MP-approach'])
+    axs[1].set_ylabel('Effective sample size per CPU-time')
+
+    plt.show()
 
 
 def boxplot_CR(mode: str = 'theta'):
@@ -421,7 +457,6 @@ def boxplot_CR(mode: str = 'theta'):
         effective_SS_MP[n] = sample[0].effective_sample_size
 
     times = [times_FP, times_MP]
-    effective_SS = [effective_SS_FP, effective_SS_MP]
     effect_per_time = [np.divide(effective_SS_FP, times_FP), np.divide(effective_SS_MP, times_MP)]
 
     axs[0].boxplot(times, labels=['FP-approach', 'MP-approach'])
@@ -507,7 +542,7 @@ def data_sample_comparison(mode: str = 'CR'):
         sigma = np.sqrt(1 / precision_CR)
         upper_bound = function + 3 * sigma
         lower_bound = function - 3 * sigma
-        ax.fill_between(x, lower_bound, upper_bound, alpha=0.1, label='3 $\sigma$ confidence interval')
+        ax.fill_between(x, lower_bound, upper_bound, alpha=0.1, label='3$\sigma$ confidence interval')
         sns.scatterplot(x=tvec, y=data, palette='orange', ax=ax, label='measured data')
         ax.legend(loc=4)
         plt.show()
@@ -526,7 +561,7 @@ def data_sample_comparison(mode: str = 'CR'):
         sigma = np.sqrt(1 / precision_mRNA)
         upper_bound = function + 3 * sigma
         lower_bound = function - 3 * sigma
-        ax.fill_between(x, lower_bound, upper_bound, alpha=0.1, label='3 $\sigma$ confidence interval')
+        ax.fill_between(x, lower_bound, upper_bound, alpha=0.1, label='3$\sigma$ confidence interval')
         sns.scatterplot(x=df_measurement.Time, y=df_measurement.Measurement, palette='orange', ax=ax,
                         label='measured data')
         ax.legend(loc=4)
@@ -537,14 +572,6 @@ def main():
     """
     Main
     """
-    boxplot_CR('all')
-
-    # for n in range(10, 30):
-    # visualisation('parameters', 'Results_CR_FP\\result_CR_FP_' + str(n) + '.pickle', True, 'parameter\\parameters_CR_FP_' + str(n) + '.png')
-    # visualisation('parameters', 'Results_CR_MP\\result_CR_MP_' + str(n) + '.pickle', True, 'parameter\\parameters_CR_MP_' + str(n) + '.png')
-    # visualisation('parameters', 'Results_mRNA_FP\\result_mRNA_FP_' + str(n) + '.pickle', True, 'parameter\\parameters_mRNA_FP_' + str(n))
-    # visualisation('parameters', 'Results_mRNA_MP\\result_mRNA_MP_' + str(n) + '.pickle', True, 'parameter\\parameters_mRNA_MP_' + str(n) + '.png')
-    # print(str(n))
-
+    boxplot_mRNA_auto()
 
 main()

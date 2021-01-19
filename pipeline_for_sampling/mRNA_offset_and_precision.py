@@ -133,8 +133,8 @@ def time_calculation():
     Generator = np.random.default_rng()
     results = pypesto.Result(marginal_sampling_mRNA())
 
-    for n in range(50):
-        print(n)
+    for n in range(7, 8):
+        print('n' + str(n))
         with open('Results_mRNA_MP\\time_list.pickle', 'rb') as infile:
             time_list = pickle.load(infile)
         with open('Results_mRNA_MP\\result_mRNA_MP_' + str(n) + '.pickle', 'rb') as infile:
@@ -145,6 +145,8 @@ def time_calculation():
 
         start_time = process_time()
         for index, data in enumerate(results.sample_result.trace_x[0, :, :]):
+            if index % 50000 == 0:
+                print('index' + str(index))
             scale = 1 / Constant(data)  # inverse becaus the gamma sampler uses shape, scale and not alpha, beta
             precision_list[index] = Generator.gamma(shape, scale)
 
@@ -155,8 +157,7 @@ def time_calculation():
         duration = process_time() - start_time
         time_list[n] = duration
         print(duration)
-        with open('Results_mRNA_MP\\time_list.pickle', 'rb') as savefile:
+        with open('Results_mRNA_MP\\time_list.pickle', 'wb') as savefile:
             pickle.dump(time_list, savefile)
-
 
 time_calculation()

@@ -2,13 +2,17 @@
 Numerical testing of the analytically derived integral
 """
 
-import scipy.integrate as integrate
-import numpy as np
-import scipy.special as special
-import matplotlib.pyplot as plt
-import seaborn as sns
-import pandas as pd
 import os
+
+import matplotlib.pyplot as plt
+import numpy as np
+import pandas as pd
+import scipy.integrate as integrate
+import scipy.special as special
+import seaborn as sns
+
+plt.rcParams['text.usetex'] = True
+plt.rcParams.update({'font.size': 17})
 
 d = os.getcwd()
 
@@ -74,14 +78,14 @@ def relative_error(noise: str = 'Gaussian', prior: str = 'normal-gamma'):
         measurement = [np.ones(10)]
         for i, value in enumerate(df[2]):
             for n in range(1, 11):
-                measurement[0][n-1] = Generator.normal(df[0][i] + n, np.sqrt(1 / df[1][i]))
+                measurement[0][n - 1] = Generator.normal(df[0][i] + n, np.sqrt(1 / df[1][i]))
             analytical = analytical_normal_gamma_prior(measurement[0])
             numerical = integrate.dblquad(integrand_normal_gamma, 0, 5, lambda x: -20, lambda x: 20
                                           , args=measurement)[0]
             df[2][i] = abs(analytical - numerical) / analytical
             print(str(i))
-        df = pd.DataFrame({'offset': df[0], 'precision': df[1], 'error': df[2]})
-        pivot = df.pivot(index='offset', columns='precision', values='error')
+        df = pd.DataFrame({'offset $c$': df[0], 'precision $\lambda$': df[1], 'relative error': df[2]})
+        pivot = df.pivot(index='offset $c$', columns='precision $\lambda$', values='relative error')
         ax = sns.heatmap(pivot, vmin=0.0, vmax=0.1, cmap='coolwarm', ax=ax, linewidths=.5,
                          cbar_kws={'label': 'relative error'})
         plt.savefig(fname=d + '\\plots\\relative_error_gaussian_noise.png')
