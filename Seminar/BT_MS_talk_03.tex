@@ -53,7 +53,7 @@
 		We can then use Markov chain Monte Carlo (MCMC) methods to proportionally 
 		sample the posterior distribution with the product of \textbf{likelihood} 
 		$p(D \mid \theta, c, \lambda)$ and \textbf{prior} $p(\theta, c, \lambda)$.
-		We will call this way \textbf{FP-approach} from now on
+		We will call this way \textbf{FP-approach} from now on.
 	\end{frame}
 	
 	\begin{frame}{Hierarchical approach}
@@ -73,7 +73,7 @@
 			p(\theta \mid D) = \frac{p(D \mid \theta) \cdot
 			p(\theta)}{p(D)}.
 		\]
-		If we can calculate the marginalized likelihood we can again use MCMC 
+		If we can calculate the marginalized likelihood we can also use MCMC 
 		methods to proportionally sample from the marginalized posterior 
 		$p(\theta \mid D)$.
 	\end{frame}
@@ -100,13 +100,13 @@
 	
 	\begin{frame}{MCMC}
 		In our tests we used 2 different algorithms for the sampling, an adaptive 
-		Metropolos sampler and a Parallel Tempering Sampler which is a multi chain 
+		Metropolis sampler and a Parallel Tempering sampler which is a multi chain 
 		method. Every chain gets tempered with a temperature $\beta \in (0, 1]$ 
 		i.e. instead of $p(D \mid \theta) \cdot p(\theta)$ we sample
 		\[
 			p(D \mid \theta)^\beta \cdot p(\theta).
 		\]
-		The first chain always has $\beta = 1$ such that it sample the correct 
+		The first chain always has $\beta = 1$ such that it samples the correct 
 		distribution. Then the different chains can exchange values - as the 
 		chains with small $\beta$ sample a more uniform distribution we expect 
 		more jumps which then lead to better mixing in the first chain.
@@ -333,12 +333,12 @@
 		\[
 			X_2(t, \theta = \{\delta, k_{TL} \cdot m_1, \xi, t_1\}) = 
 			\frac{k_{TL} \cdot m_1}{\xi - \delta} \Bigl(e^{-\xi (t - t_1)} 
-			- e^{-\delta(t - t_1)}\Bigr)
+			- e^{-\delta(t - t_1)}\Bigr).
 		\]
 		Especially
 		\[
 			X_2(t, \delta = \delta_1, \xi = \xi_1) = X_2(t, \delta = \xi_1,
-			 \xi = \delta_1)
+			 \xi = \delta_1).
 		\]
 	\end{frame}
 	
@@ -558,8 +558,8 @@
 			p(D \mid \theta) = \sum_{i = 0}^N b_i \int_0^\infty \frac{p(\sigma)}
 			{\sigma} \exp \biggl\{\frac{l_i}{\sigma} \biggr\} \dx \sigma.
 		\]
-		In general also for a Gaussian or Laplacian $c$ prior we arrive at such a form 
-		just with different constants (and possibly different support).
+		In general also for a Gaussian or Laplacian $c$ prior we arrive at such a 
+		form just with different constants (and possibly different support).
 	\end{frame}
 	
 	\begin{frame}{Amoroso $\sigma$ prior}
@@ -621,6 +621,12 @@
 			\item Also we can extend the setting to also include scaling 
 			parameters.
 		\end{itemize}
+	\end{frame}
+	
+	\begin{frame}{Acknowledgements}
+		At last I want to thank Jan Hasenauer and Elba Raimùndez-Alvarez for their 
+		support in various ways throughout the thesis and Anton Bovier for his 
+		disposition to take part as a revisor.
 	\end{frame}
 	
 	\begin{frame}{End}
