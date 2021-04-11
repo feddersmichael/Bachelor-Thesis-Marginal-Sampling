@@ -1,0 +1,12 @@
+observableId	simulationConditionId	time	measurement	observableParameters	noiseParameters
+obs_b	c0	0	1.0219	offset	sigma
+obs_b	c0	1	1.4442	offset	sigma
+obs_b	c0	2	1.584	offset	sigma
+obs_b	c0	3	1.6951	offset	sigma
+obs_b	c0	4	1.7248999999999999	offset	sigma
+obs_b	c0	5	1.7242	offset	sigma
+obs_b	c0	6	1.7398	offset	sigma
+obs_b	c0	7	1.7506	offset	sigma
+obs_b	c0	8	1.7843	offset	sigma
+obs_b	c0	9	1.7768000000000002	offset	sigma
+obs_b	c0	10	1.7359	offset	sigma
