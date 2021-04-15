@@ -77,13 +77,25 @@ def X_2_mRNA(t, t0=t_0, kTL_m0=kTLm_0, xi_=xi[0], delta_=delta[0]):
     return X[1]
 
 
-def standard_sampling_CR():
+def Gaussian_noise_CR_model_FP_sampling():
     """Creates a pyPESTO problem."""
     objective = pypesto.Objective(fun=negative_log_posterior)
     problem = pypesto.Problem(objective=objective,  # objective function
                               lb=[-5, -5, -np.inf, 0],  # lower bounds
                               ub=[5, 5, np.inf, np.inf],  # upper bounds
                               x_names=['$\log(k_1)$', '$\log(k_2)$', 'offset $c$', 'precision $\lambda$'],
+                              # parameter names
+                              x_scales=['log', 'log', 'lin', 'lin'])  # parameter scale
+    return problem
+
+
+def Laplacian_noise_CR_model_FP_sampling():
+    """Creates a pyPESTO problem."""
+    objective = pypesto.Objective(fun=negative_log_posterior)
+    problem = pypesto.Problem(objective=objective,  # objective function
+                              lb=[-5, -5, -np.inf, 0],  # lower bounds
+                              ub=[5, 5, np.inf, np.inf],  # upper bounds
+                              x_names=['$\log(k_1)$', '$\log(k_2)$', 'offset $c$', 'scale $\sigma$'],
                               # parameter names
                               x_scales=['log', 'log', 'lin', 'lin'])  # parameter scale
     return problem
@@ -136,7 +148,7 @@ def result_generator(result_type: str = None, sample_result: str = None):
     :return: the generated Result object
     """
     if result_type == 'CR_FP':
-        generated_result = pypesto.Result(standard_sampling_CR())
+        generated_result = pypesto.Result(Gaussian_noise_CR_model_FP_sampling())
         if sample_result is not None:
             generated_result.sample_result = sample_result
         return generated_result
@@ -197,7 +209,8 @@ def visualisation(mode: str, path: str, save: bool = False, savename: str = None
         if save:
             plt.savefig(fname=d + '\\plots\\' + samplefile[1] + '\\' + savename + '.png')
     elif mode == 'parameters':
-        ax = visualize.sampling_parameters_trace(sample_result, size=(12, 5), use_problem_bounds=False, full_trace=True)
+        ax = visualize.sampling.sampling_parameters_trace(sample_result, size=(12, 5), use_problem_bounds=False,
+                                                          full_trace=True)
         if show:
             plt.show()
         if save:
@@ -337,6 +350,10 @@ def overlap_plot(model: str = 'CR', save: bool = True):
     fig.legend(bbox_to_anchor=(0.5, -0.03), loc='upper center', mode='expand', ncol=2, borderaxespad=0)
     if save:
         plt.savefig(fname='plots\\combination\\' + model + '\\overlap_plot_' + model + '.png', bbox_inches="tight")
+
+
+def single_parameter_visualization():
+    x = 0
 
 
 def boxplot_mRNA_auto():
