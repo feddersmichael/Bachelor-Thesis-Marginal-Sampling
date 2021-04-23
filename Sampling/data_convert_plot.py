@@ -93,7 +93,7 @@ def Laplacian_noise_CR_model_FP_sampling():
     """Creates a pyPESTO problem."""
     objective = pypesto.Objective(fun=negative_log_posterior)
     problem = pypesto.Problem(objective=objective,  # objective function
-                              lb=[-5, -5, -np.inf, 0],  # lower bounds
+                              lb=[-5, -5, 0, 0],  # lower bounds
                               ub=[5, 5, np.inf, np.inf],  # upper bounds
                               x_names=['$\log(k_1)$', '$\log(k_2)$', 'offset $c$', 'scale $\sigma$'],
                               # parameter names
@@ -140,33 +140,43 @@ def marginal_sampling_mRNA():
     return problem
 
 
-def result_generator(result_type: str = None, sample_result: str = None):
+def result_generator(result_type: list = None, sample_result: str = None):
     """
     Transforms a sample_result into a proper Result object
     :param result_type: Defines the object function we use
     :param sample_result: if given already includes the sample_result into the new Result object
     :return: the generated Result object
     """
-    if result_type == 'CR_FP':
-        generated_result = pypesto.Result(Gaussian_noise_CR_model_FP_sampling())
-        if sample_result is not None:
-            generated_result.sample_result = sample_result
-        return generated_result
-    elif result_type == 'CR_MP':
-        generated_result = pypesto.Result(marginal_sampling_CR())
-        if sample_result is not None:
-            generated_result.sample_result = sample_result
-        return generated_result
-    elif result_type == 'mRNA_FP':
-        generated_result = pypesto.Result(standard_sampling_mRNA())
-        if sample_result is not None:
-            generated_result.sample_result = sample_result
-        return generated_result
-    elif result_type == 'mRNA_MP':
-        generated_result = pypesto.Result(marginal_sampling_mRNA())
-        if sample_result is not None:
-            generated_result.sample_result = sample_result
-        return generated_result
+    if result_type[0] == 'Gaussian':
+        if result_type[1] == 'Conversion_Reaction':
+            if result_type[2] == 'Full_parameter':
+                generated_result = pypesto.Result(Gaussian_noise_CR_model_FP_sampling())
+                if sample_result is not None:
+                    generated_result.sample_result = sample_result
+                return generated_result
+            else:
+                generated_result = pypesto.Result(marginal_sampling_CR())
+                if sample_result is not None:
+                    generated_result.sample_result = sample_result
+                return generated_result
+        if result_type[1] == 'mRNA':
+            if result_type[2] == 'Full_parameter':
+                generated_result = pypesto.Result(standard_sampling_mRNA())
+                if sample_result is not None:
+                    generated_result.sample_result = sample_result
+                return generated_result
+            else:
+                generated_result = pypesto.Result(marginal_sampling_mRNA())
+                if sample_result is not None:
+                    generated_result.sample_result = sample_result
+                return generated_result
+    if result_type[0] == 'Laplacian':
+        if result_type[1] == 'Conversion_Reaction':
+            if result_type[2] == 'Full_parameter':
+                generated_result = pypesto.Result(Laplacian_noise_CR_model_FP_sampling())
+                if sample_result is not None:
+                    generated_result.sample_result = sample_result
+                return generated_result
 
 
 def burn_in_change(path: str = None, burn_in: int = None):
@@ -195,26 +205,29 @@ def visualisation(mode: str, path: str, save: bool = False, savename: str = None
     ax = plt.subplot()
     with open(path, 'rb') as infile:
         samplefile = pickle.load(infile)
-    sample_result = result_generator(samplefile[1], samplefile[0])
+    sample_result = result_generator([samplefile[1], samplefile[2], samplefile[3]], samplefile[0])
     if mode == 'trace':
-        ax = visualize.sampling_fval_trace(sample_result, size=(12, 5), full_trace=True)
+        ax = visualize.sampling_fval_traces(sample_result, size=(12, 5), full_trace=True)
         if show:
             plt.show()
         if save:
-            plt.savefig(fname=d + '\\plots\\' + samplefile[1] + '\\' + savename + '.png')
+            plt.savefig(fname=samplefile[0] + '_noise/' + samplefile[1] + '_model/Results/' + samplefile[2]
+                              + '/' + savename + '.png')
     elif mode == '1d_marginals':
         ax = visualize.sampling_1d_marginals(sample_result, size=(12, 5))
         if show:
             plt.show()
         if save:
-            plt.savefig(fname=d + '\\plots\\' + samplefile[1] + '\\' + savename + '.png')
+            plt.savefig(fname=samplefile[0] + '_noise/' + samplefile[1] + '_model/Results/' + samplefile[2]
+                              + '/' + savename + '.png')
     elif mode == 'parameters':
         ax = visualize.sampling.sampling_parameters_trace(sample_result, size=(12, 5), use_problem_bounds=False,
                                                           full_trace=True)
         if show:
             plt.show()
         if save:
-            plt.savefig(fname=d + '\\plots\\' + samplefile[1] + '\\' + savename + '.png')
+            plt.savefig(fname=samplefile[0] + '_noise/' + samplefile[1] + '_model/Results/' + samplefile[2]
+                              + '/' + savename + '.png')
 
 
 def merge_and_plot(start_sample: str = None, amount_samples: int = 10, save: bool = False, visualization: bool = False):
@@ -589,7 +602,8 @@ def main():
     """
     Main
     """
-    boxplot_mRNA_auto()
+    visualisation('parameters', 'Laplacian_noise/Conversion_Reaction_model/Results/Full_parameter/standard_choice.pickle',
+                  True, 'standard_choice')
 
 
 main()
