@@ -207,7 +207,7 @@ def visualisation(mode: str, path: str, save: bool = False, savename: str = None
         samplefile = pickle.load(infile)
     sample_result = result_generator([samplefile[1], samplefile[2], samplefile[3]], samplefile[0])
     if mode == 'trace':
-        ax = visualize.sampling_fval_traces(sample_result, size=(12, 5), full_trace=True)
+        ax = visualize.sampling_fval_trace(sample_result, size=(12, 5), full_trace=True)
         if show:
             plt.show()
         if save:
