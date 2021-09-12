@@ -6,6 +6,6 @@ problems:
     condition_files:
       - SS_conditions.tsv
     measurement_files:
-      - SS_measurements_loss.tsv
+      - SS_measurements.tsv
     observable_files:
       - SS_observables.tsv
