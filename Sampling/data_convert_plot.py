@@ -602,7 +602,8 @@ def main():
     """
     Main
     """
-    visualisation('parameters', 'Laplacian_noise/Conversion_Reaction_model/Results/Full_parameter/standard_choice.pickle',
+    visualisation('parameters',
+                  'offset/Laplacian_noise/Conversion_Reaction_model/Results/Full_parameter/standard_choice.pickle',
                   True, 'standard_choice')
 
 
