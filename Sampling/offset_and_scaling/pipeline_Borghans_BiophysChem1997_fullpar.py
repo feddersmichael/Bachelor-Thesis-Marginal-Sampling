@@ -8,6 +8,7 @@ import pypesto
 import pypesto.petab
 import pypesto.sample as sample
 import pypesto.visualize as visualize
+from scipy.special import gammaln
 
 import os
 import sys
@@ -31,6 +32,22 @@ importer = pypesto.petab.PetabImporter(petab_problem)
 problem = importer.create_problem()
 
 
+def negative_log_prior(x):
+
+    scaling = x[19]
+    offset = x[18]
+    precision = x[20]
+
+    precision_prior = alpha * np.log(beta) - gammaln(alpha) + (alpha - 1) * np.log(precision) - beta * precision
+
+    scaling_prior = 0.5 * (np.log(precision) + np.log(tau) - np.log(2) - np.log(np.pi)) - (precision * tau * 0.5 * (scaling - z)**2)
+
+    offset_prior = 0.5 * (np.log(precision) + np.log(kappa) - np.log(2) - np.log(np.pi)) - (precision * kappa * 0.5 * (offset - mu)**2)
+
+    return - (precision_prior + scaling_prior + offset_prior)
+
+#objective_function = pypesto.
+
 # In[3]:
 
 
@@ -51,6 +68,16 @@ edatas = importer.create_edatas()
 _data = [amici.numpy.ExpDataView(edata)['observedData']
          for edata in edatas]
 data = np.concatenate(_data, axis=0)
+
+mu = 0
+z = 0
+# std for scaling parameter --> higher = more constrained / lower = more relaxed
+alpha = 100
+# center the sigma parameter
+beta = 0.1
+# std for scaling parameter --> higher = more constrained / lower = more relaxed
+kappa = 0.01
+tau = 0.01
 
 
 # In[5]:
