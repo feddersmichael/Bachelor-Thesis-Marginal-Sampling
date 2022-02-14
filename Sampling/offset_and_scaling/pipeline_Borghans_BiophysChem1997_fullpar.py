@@ -29,7 +29,14 @@ petab_problem = petab.Problem.from_yaml(
 importer = pypesto.petab.PetabImporter(petab_problem)
 
 # create problem
-problem = importer.create_problem()
+_problem = importer.create_problem()
+
+lb = deepcopy(_problem.lb_full)
+lb[18:21] = [np.NINF, np.NINF, 0]
+ub = deepcopy(_problem.ub_full)
+ub[18:21] = [np.inf, np.inf, np.inf]
+x_scales = deepcopy(_problem.x_scales)
+x_names = deepcopy(_problem.x_names)
 
 
 def negative_log_prior(x):
@@ -53,7 +60,7 @@ def negative_log_prior(x):
 
 x_full = np.asarray(deepcopy(petab_problem.x_nominal_scaled))
 
-res = problem.objective.call_unprocessed(x_full, [1], 'mode_fun')
+res = _problem.objective.call_unprocessed(x_full, [1], 'mode_fun')
 
 print(res['fval'])
 
@@ -94,7 +101,23 @@ plt.show()
 
 
 # In[6]:
+def negative_log_posterior(x):
+    # experimental data
+    # data = np.random.rand(10)
 
+    N = data.shape[0]
+
+    _objective = _problem.objective.call_unprocessed(x, [0], 'mode_fun')
+    neg_log_likelihood = _objective['fval']
+
+    neg_log_post = neg_log_likelihood + negative_log_prior(x)
+
+    return neg_log_post
+
+
+objective_function = pypesto.Objective(fun=negative_log_posterior)
+
+problem = pypesto.Problem(objective=objective_function, lb=lb, ub=ub, x_scales=x_scales, x_names=x_names)
 
 sampler = sample.AdaptiveMetropolisSampler()
 n_samples = 20000

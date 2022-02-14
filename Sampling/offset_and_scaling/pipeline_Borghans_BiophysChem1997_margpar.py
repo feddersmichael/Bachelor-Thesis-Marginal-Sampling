@@ -127,8 +127,6 @@ result = sample.sample(problem, n_samples=n_samples,
 sample.effective_sample_size(result)
 
 # In[9]:
-
-
 ax = visualize.sampling_1d_marginals(result, size=(13, 13))
 plt.show()
 # In[10]:
@@ -136,8 +134,13 @@ ax = visualize.sampling_fval_traces(result, full_trace=True, size=(12, 3))
 plt.show()
 
 # In[10]:
+result.sample_result.burn_in = 380000
 ax = visualize.sampling_parameter_traces(result, full_trace=True, size=(12, 3))
 plt.show()
+
+# In[11]:
+
+print(result.sample_result.trace_x[0, 461400, 14])
 # In[11]:
 
 
