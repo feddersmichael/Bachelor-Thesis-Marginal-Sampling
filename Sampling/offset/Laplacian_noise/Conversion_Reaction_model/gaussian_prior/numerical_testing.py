@@ -117,10 +117,18 @@ def relative_error():
         relerr = abs(analytical - numerical) / abs(analytical)
         df[2][i] = relerr
         print(str(i))
-    df = pd.DataFrame({'offset': df[0], 'shape': df[1], 'relative error': df[2]})
-    pivot = df.pivot(index='offset', columns='shape', values='relative error')
-    ax = sns.heatmap(pivot, cmap='coolwarm', ax=ax, linewidths=.5,
-                     cbar_kws={'label': 'relative error'}, vmin=0, vmax=1)
+    df = pd.DataFrame({'offset': df[0], 'shape': df[1], 'relative_error': df[2]})
+    pivot = df.pivot(index='offset', columns='shape', values='relative_error')
+    
+    _limit=max([abs(df.relative_error.max()), abs(df.relative_error.min())])
+    
+    heatmap_limit=max([1, _limit])
+    
+    ax = sns.heatmap(pivot, cmap='coolwarm', linewidths=.5, ax=ax,
+                     cbar_kws={'label': 'relative error'}, 
+                     vmin=-heatmap_limit, vmax=heatmap_limit
+                    )
+    
     # plt.savefig(fname=d + '\\plots\\relative_error_gaussian_noise.png')
     plt.show()
 
