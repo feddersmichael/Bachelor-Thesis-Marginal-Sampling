@@ -21,13 +21,13 @@ sum_3 = tau * (N * kappa * mu ** 2 + (N + kappa) * np.sum(y ** 2) - 2 * kappa * 
 
 sum_4 = -(N + kappa) * np.sum(h * y) ** 2
 
-print(sum_1)
+# print(sum_1)
 
-print(sum_2)
+# print(sum_2)
 
-print(sum_3)
+# print(sum_3)
 
-print(sum_4)
+# print(sum_4)
 
 print(sum_4 + sum_3 + sum_2 + sum_1)
 
