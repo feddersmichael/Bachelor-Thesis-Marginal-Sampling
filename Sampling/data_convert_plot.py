@@ -603,7 +603,7 @@ def main():
     Main
     """
     visualisation('parameters',
-                  'offset/Laplacian_noise/Conversion_Reaction_model/Results/Full_parameter/standard_choice.pickle',
+                  'offset/Laplacian_noise/Conversion_Reaction_model/exponential_prior/Results/Full_parameter/standard_choice.pickle',
                   True, 'standard_choice')
 
 
